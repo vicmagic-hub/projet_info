@@ -8,3 +8,23 @@ class Board:
         """
         i, j = position
         return self.squares[i][j] != None
+    
+    def __str__(self):
+        board_str = ""
+        board_str += "  a b c d e f g h\n"
+        board_str += " +---------------+\n"
+        for i in range(8):
+            board_str += f"{8 - i}|"
+            for j in range(8):
+                if self.squares[7-i][j] is None:
+                    board_str += " |"
+                else:
+                    if self.squares[7-i][j].marque == '':
+                        board_str += "p|"
+                    else :
+                        board_str += (self.squares[7-i][j].marque + "|")
+            
+            board_str += "\n"
+        board_str += " +---------------+\n"
+        return board_str
+            

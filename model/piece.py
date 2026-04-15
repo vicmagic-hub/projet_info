@@ -88,6 +88,7 @@ class King(Piece):
 #tests temporaires
 if __name__ == "__main__":
     a=Board()
+    print(a)
     p = Pawn('white', (1,0), a)
     print(p.possible_moves())
     print(p, p.position)
@@ -96,3 +97,4 @@ if __name__ == "__main__":
     print(p, p.position)
     print(a.test_case((3,0)))
     print(p.possible_moves())
+    print(a)

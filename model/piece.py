@@ -58,43 +58,28 @@ class Pawn(Piece):
         self.first_move = False
 
 class Rook(Piece):
-    def __init__(self, color, position):
-        super().__init__(color, position)
+    def __init__(self, color, position, board):
+        super().__init__(color, position, board)
         self.marque = 'R'
         self.first_move = True
 
 class Knight(Piece):
-    def __init__(self, color, position):
-        super().__init__(color, position)
+    def __init__(self, color, position, board):
+        super().__init__(color, position, board)
         self.marque = 'N'
 
 class Bishop(Piece):
-    def __init__(self, color, position):
-        super().__init__(color, position)
+    def __init__(self, color, position, board):
+        super().__init__(color, position, board)
         self.marque = 'B'
 
 class Queen(Piece):
-    def __init__(self, color, position):
-        super().__init__(color, position)
+    def __init__(self, color, position, board):
+        super().__init__(color, position, board)
         self.marque = 'Q'
 
 class King(Piece):
-    def __init__(self, color, position):
-        super().__init__(color, position)
+    def __init__(self, color, position, board):
+        super().__init__(color, position, board)
         self.marque = 'K'
         self.first_move = True
-
-
-#tests temporaires
-if __name__ == "__main__":
-    a=Board()
-    print(a)
-    p = Pawn('white', (1,0), a)
-    print(p.possible_moves())
-    print(p, p.position)
-    print(a.test_case((1,0)))
-    p.move((3,0))
-    print(p, p.position)
-    print(a.test_case((3,0)))
-    print(p.possible_moves())
-    print(a)

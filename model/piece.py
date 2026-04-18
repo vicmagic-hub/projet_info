@@ -34,6 +34,10 @@ class Pawn(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = ''
+        if self.color == 'white':
+            self.symbol = '+p'
+        else:
+            self.symbol = '-p'
         self.first_move = True
     
     def possible_moves(self):
@@ -61,25 +65,45 @@ class Rook(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = 'R'
+        if self.color == 'white':
+            self.symbol = '+R'
+        else:
+            self.symbol = '-R'
         self.first_move = True
 
 class Knight(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = 'N'
+        if self.color == 'white':
+            self.symbol = '+N'
+        else:
+            self.symbol = '-N'
 
 class Bishop(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = 'B'
+        if self.color == 'white':
+            self.symbol = '+B'
+        else:
+            self.symbol = '-B'
 
 class Queen(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = 'Q'
+        if self.color == 'white':
+            self.symbol = '+Q'
+        else:
+            self.symbol = '-Q'
 
 class King(Piece):
     def __init__(self, color, position, board):
         super().__init__(color, position, board)
         self.marque = 'K'
+        if self.color == 'white':
+            self.symbol = '+K'
+        else:
+            self.symbol = '-K'
         self.first_move = True

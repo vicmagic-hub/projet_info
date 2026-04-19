@@ -3,14 +3,13 @@ from piece import Pawn, Rook, Knight, Bishop, Queen, King
 
 
 class Game():
-    def __init__(self, name, type,opponent, status):
+    def __init__(self, name, type,opponent, side):
         self.board = Board()
         self.name = name
         self.type = type
         self.opponent = opponent
-        self.status = status
-    
-    def initialize(self):
+        self.side = side
+        to_play = 'white'
         #initialisation des pions
         for j in range(8):
             pw = Pawn('white', (1, j), self.board)
@@ -36,10 +35,39 @@ class Game():
         #initialisation des Rois
         Kw = King('white', (0, 4), self.board)
         Kb = King('black', (7, 4), self.board)
+        for i in range(8): #pour la démo, en vrai ce sera "while not self.board.mate : "
+            self.tour(to_play, type)
+    
+    def tour (self, to_play, type, counter = 0):
+        if type == "local":
+            valid = False
+            print(f"{to_play}'s turn to play")
+            while valid == False:
+                s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
+                i, j = ord(s[0])-ord('a'), int(s[1])-1
+                if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
+                    print("Invalid piece, try again")
+                    continue
+                possible_moves = self.board.squares[i][j].possible_moves()
+                print("Possible moves : ", possible_moves)
+                move = input("select your move, enter 0  to cancel : ")
+                if move == "0":
+                    continue 
+                if move in possible_moves :
+                    valid = True
+                    self.board.squares[i][j].move(move)
+                else :
+                    print("Invalid move, try again")
+                #traitement du coup (a faire)
+                if to_play == 'black':
+                    to_play = 'white'
+                else :
+                    to_play = 'black'
+
 
 
 #tests temporaires
 if __name__ == "__main__":
-    g = Game("test", "local", "none", "ongoing")
-    g.initialize()
+    g = Game("test", "test", "none", "ongoing")
     print(g.board)
+    g = Game("test", "local", "none", "ongoing")

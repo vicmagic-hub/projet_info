@@ -1,6 +1,9 @@
 class Board:
     def __init__(self):
         self.squares = [[None for _ in range(8)] for _ in range(8)]
+        self.white_attacked = [[False for _ in range(8)] for _ in range(8)]
+        self.black_attacked = [[False for _ in range(8)] for _ in range(8)]
+        self.mate = False
     
     def test_case(self, position):
         """
@@ -11,8 +14,8 @@ class Board:
     
     def __str__(self):
         board_str = ""
-        board_str += "     a   b   c   d   e   f   g   h\n"
-        board_str += "  +-------------------------------+\n"
+        board_str += "    a   b   c   d   e   f   g   h\n"
+        board_str += "  +---+---+---+---+---+---+---+---+\n"
         for i in range(8):
             board_str += f"{8 - i} |"
             for j in range(8):
@@ -22,7 +25,7 @@ class Board:
                     board_str += (self.squares[7-i][j].symbol + " |")
             board_str += f" {8 - i}"
             board_str += "\n"
-            board_str += "  +-------------------------------+\n"
-        board_str += "     a   b   c   d   e   f   g   h\n"
+            board_str += "  +---+---+---+---+---+---+---+---+\n"
+        board_str += "    a   b   c   d   e   f   g   h\n"
         return board_str
             

@@ -44,12 +44,12 @@ class Game():
             print(f"{to_play}'s turn to play")
             while valid == False:
                 s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
-                i, j = ord(s[0])-ord('a'), int(s[1])-1
+                i, j = int(s[1])-1, ord(s[0])-ord('a')
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
                     continue
                 possible_moves = self.board.squares[i][j].possible_moves()
-                print("Possible moves : ", possible_moves)
+                print(f"Possible moves for place {i, j}, piece {self.board.squares[i][j]}: ", possible_moves)
                 move = input("select your move, enter 0  to cancel : ")
                 if move == "0":
                     continue 
@@ -58,13 +58,11 @@ class Game():
                     self.board.squares[i][j].move(move)
                 else :
                     print("Invalid move, try again")
-                #traitement du coup (a faire)
-                if to_play == 'black':
-                    to_play = 'white'
-                else :
-                    to_play = 'black'
-
-
+            #traitement du coup (a faire)
+            if to_play == 'black':
+                to_play = 'white'
+            else :
+                to_play = 'black'
 
 #tests temporaires
 if __name__ == "__main__":

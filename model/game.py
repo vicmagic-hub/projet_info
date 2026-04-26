@@ -10,6 +10,7 @@ class Game():
         self.opponent = opponent
         self.side = side
         to_play = 'white'
+        counter = 1
         #initialisation des pions
         for j in range(8):
             pw = Pawn('white', (1, j), self.board)
@@ -36,9 +37,10 @@ class Game():
         Kw = King('white', (0, 4), self.board)
         Kb = King('black', (7, 4), self.board)
         for i in range(8): #pour la démo, en vrai ce sera "while not self.board.mate : "
-            self.tour(to_play, type)
+            to_play, counter = self.tour(to_play, type, counter)
     
-    def tour (self, to_play, type, counter = 0):
+    
+    def tour (self, to_play, type, counter):
         if type == "local":
             valid = False
             print(f"{to_play}'s turn to play")
@@ -49,23 +51,26 @@ class Game():
                     print("Invalid piece, try again")
                     continue
                 possible_moves = self.board.squares[i][j].possible_moves()
-                print(f"Possible moves for place {i, j}, piece {self.board.squares[i][j]}: ", possible_moves)
-                move = input("select your move, enter 0  to cancel : ")
-                if move == "0":
+                s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
+                for i in range(len(possible_moves)):
+                    s += "\nMove " + str(i) + ": " + str(possible_moves[i])
+                print(s)
+                move = input("select your move with its position (e.g 0 or 4)  in the list enter exit to cancel : ")
+                if move == "exit":
                     continue 
-                if move in possible_moves :
+                if move.isdigit() and int(move) < len(possible_moves):
+                    m = possible_moves[int(move)]
                     valid = True
-                    self.board.squares[i][j].move(move)
                 else :
                     print("Invalid move, try again")
             #traitement du coup (a faire)
             if to_play == 'black':
                 to_play = 'white'
+                return to_play, counter +1
             else :
                 to_play = 'black'
+                return to_play, counter
 
 #tests temporaires
 if __name__ == "__main__":
-    g = Game("test", "test", "none", "ongoing")
-    print(g.board)
     g = Game("test", "local", "none", "ongoing")

@@ -1,4 +1,7 @@
+from abc import abstractmethod
+
 from board import Board
+from coup_encoder import Move
 
 class Piece:
     """
@@ -8,27 +11,23 @@ class Piece:
         self.color = color
         self.board = board
         self.position = position
-        self.board.squares[position[0]][position[1]] = self
-        self.marque = ''
+        i,j = position
+        assert 0 <= i < 8 and 0 <= j < 8, "Invalid position, out of bounds "
+        self.board.squares[i][j] = self
+        self.marque = 'PIECE'
 
     def __str__(self):
         i,j = self.position
         col = chr(ord('a') + j)
         return self.marque + col + str(i+1)
     
-    def move(self, new_position):
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[new_position[0]][new_position[1]] = self
-        self.position = new_position
+    @abstractmethod
+    def move(self, m):
+        pass
     
-    def take(self, new_position):
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[new_position[0]][new_position[1]] = self
-        self.position = new_position
-    
+    @abstractmethod
     def possible_moves(self):
-        #future classe abstraite, à implémenter pour chaque type de pièce
-        return []
+        pass
     
 class Pawn(Piece):
     def __init__(self, color, position, board):
@@ -41,7 +40,7 @@ class Pawn(Piece):
         self.first_move = True
     
     def possible_moves(self):
-        #ne gère pas les colisions/sorties de plateau pour le moment
+        #proto methode
         #ne gère pas les prises pour le moment
         #ne gère pas la promotion pour le moment
         """
@@ -53,13 +52,36 @@ class Pawn(Piece):
         moves = []
         i, j = self.position
         if self.first_move:
-            moves.append((i+ 2 * direction, j ))
-        moves.append((i + direction, j ))
+            m = Move(self.board, self.position, (i + 2 * direction, j), 'classic')
+            moves.append(m)
+        m = Move(self.board, self.position, (i + direction, j), 'classic')
+        moves.append(m)
         return moves
     
-    def move(self, new_position):
-        super().move(new_position)
-        self.first_move = False
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        if m.type == 'promotion' or m.type == 'promoprise':
+            #gestion de la promotion
+            new_piece = input("Enter the piece you want to promote to (Q, R, B, N) : ")
+            m.promotion_piece = new_piece
+            if new_piece == 'Q':
+                self.board.squares[i][j] = Queen(self.color, (i,j), self.board)
+            elif new_piece == 'R':
+                self.board.squares[i][j] = Rook(self.color, (i,j), self.board)  
+            elif new_piece == 'B':
+                self.board.squares[i][j] = Bishop(self.color, (i,j), self.board)
+            elif new_piece == 'N':
+                self.board.squares[i][j] = Knight(self.color, (i,j), self.board)
+        elif m.type == 'enpassant' :
+            self.board.squares[i][j] = self
+            self.position = (i,j)
+            if self.color == 'white':
+                self.board.squares[i-1][j] = None
+        else:
+            self.board.squares[i][j] = self
+            self.position = (i,j)
+            self.first_move = False
 
 class Rook(Piece):
     def __init__(self, color, position, board):
@@ -70,6 +92,12 @@ class Rook(Piece):
         else:
             self.symbol = '-R'
         self.first_move = True
+    
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        self.board.squares[i][j] = self
+        self.position = (i,j)
 
 class Knight(Piece):
     def __init__(self, color, position, board):
@@ -79,6 +107,12 @@ class Knight(Piece):
             self.symbol = '+N'
         else:
             self.symbol = '-N'
+    
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        self.board.squares[i][j] = self
+        self.position = (i,j)
 
 class Bishop(Piece):
     def __init__(self, color, position, board):
@@ -88,6 +122,12 @@ class Bishop(Piece):
             self.symbol = '+B'
         else:
             self.symbol = '-B'
+    
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        self.board.squares[i][j] = self
+        self.position = (i,j)
 
 class Queen(Piece):
     def __init__(self, color, position, board):
@@ -97,6 +137,12 @@ class Queen(Piece):
             self.symbol = '+Q'
         else:
             self.symbol = '-Q'
+    
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        self.board.squares[i][j] = self
+        self.position = (i,j)
 
 class King(Piece):
     def __init__(self, color, position, board):
@@ -107,3 +153,25 @@ class King(Piece):
         else:
             self.symbol = '-K'
         self.first_move = True
+    
+    def move(self, m):
+        i,j = m.arrivee
+        self.board.squares[self.position[0]][self.position[1]] = None
+        if m.type == 'castle':
+            #gestion du roque
+            if j == 6:
+                #petit roque 
+                self.board.squares[i][j] = self
+                self.board.squares[i][5] = self.board.squares[i][7]
+                self.board.squares[i][5].position = (i,5)
+                self.board.squares[i][7] = None
+                
+            else:
+                #grand roque
+                self.board.squares[i][j] = self
+                self.board.squares[i][3] = self.board.squares[i][0]
+                self.board.squares[i][3].position = (i,3)
+                self.board.squares[i][0] = None
+        else:
+            self.board.squares[i][j] = self
+            self.position = (i,j)

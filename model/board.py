@@ -1,18 +1,31 @@
 class Board:
+    """
+    Classe pour le plateaux
+    """
     def __init__(self):
+        """
+        initialisation d'un plateau : 
+        création de squares pour stocker les pièces
+        création de white & black_attacked pour stocker les cases attaquées pa les blancs où noirs
+        création de la variable mat (fin de partie)
+        """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.white_attacked = [[False for _ in range(8)] for _ in range(8)]
         self.black_attacked = [[False for _ in range(8)] for _ in range(8)]
-        self.mate = False
+        self.mat = False
     
     def test_case(self, position):
         """
-        Méthode pour tester si une case est occupée ou non
+        Méthode pour tester l'occupation d'une case de position (i,j) sur le plateau
         """
         i, j = position
         return self.squares[i][j] != None
     
     def __str__(self):
+        """
+        Affichage du plateau dans la console
+        Proposer une variation pour faire jouer les noirs ? 
+        """
         board_str = ""
         board_str += "    a   b   c   d   e   f   g   h\n"
         board_str += "  +---+---+---+---+---+---+---+---+\n"

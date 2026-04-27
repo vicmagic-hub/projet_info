@@ -3,7 +3,16 @@ from piece import Pawn, Rook, Knight, Bishop, Queen, King
 
 
 class Game():
+    """
+    Classe pour les parties
+    """
     def __init__(self, name, type,opponent, side):
+        """
+        initialisation d'une partie :
+        création d'un plateau, nom de la partie, type de partie (local, online), adversaire (none si local), côté joué (white ou black)
+        initialisation des pièces sur le plateau
+        TEMPORAIREMENT, quelques tours implémentés
+        """
         self.board = Board()
         self.name = name
         self.type = type
@@ -36,11 +45,23 @@ class Game():
         #initialisation des Rois
         Kw = King('white', (0, 4), self.board)
         Kb = King('black', (7, 4), self.board)
-        for i in range(8): #pour la démo, en vrai ce sera "while not self.board.mate : "
+        for i in range(8): #pour la démo, en vrai ce sera "while not self.board.mat : "
             to_play, counter = self.tour(to_play, type, counter)
     
     
     def tour (self, to_play, type, counter):
+        """
+        Méthode pour faire jouer un tour
+        to_play : couleur du joueur qui doit jouer
+        type : type de partie (local, online)
+        counter : nombre de tours joués(1 tour = blanc + noirs)
+        POUR LE MOMENT : 
+            Sélection d'une pièce 
+            Affichage des coups possibles pour cette pièce
+            Sélection du coup à jouer
+            Traitement du coup (à faire)
+            Passage au joueur suivant
+        """
         if type == "local":
             valid = False
             print(f"{to_play}'s turn to play")
@@ -73,4 +94,4 @@ class Game():
 
 #tests temporaires
 if __name__ == "__main__":
-    g = Game("test", "local", "none", "ongoing")
+    g = Game("test", "local", "none", "white")

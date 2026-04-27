@@ -7,9 +7,9 @@ class Move():
     def __init__(self,piece, depart, arrivee, type,captured_piece = None, promotion_piece = None):
         """
         initialisation d'un coup : 
-        échiquier, position de départ, position d'arrivée, 
+        pièce, position de départ, position d'arrivée, 
         type de coup (normal, prise, enpassant, promotion, promoprise, castle),
-        éventuel échec, éventuelle pièce capturée, éventuelle pièce de promotion si besoin
+        éventuelle pièce capturée, éventuelle pièce de promotion si besoin
         """""
         self.piece = piece
         self.depart = depart

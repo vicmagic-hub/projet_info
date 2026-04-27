@@ -45,7 +45,7 @@ class Game():
         #initialisation des Rois
         Kw = King('white', (0, 4), self.board)
         Kb = King('black', (7, 4), self.board)
-        for i in range(8): #pour la démo, en vrai ce sera "while not self.board.mat : "
+        while not self.board.mat :
             to_play, counter = self.tour(to_play, type, counter)
     
     
@@ -65,6 +65,8 @@ class Game():
         if type == "local":
             valid = False
             print(f"{to_play}'s turn to play")
+            if self.name == "test":
+                print(self.board)
             while valid == False:
                 s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
                 i, j = int(s[1])-1, ord(s[0])-ord('a')
@@ -73,18 +75,18 @@ class Game():
                     continue
                 possible_moves = self.board.squares[i][j].possible_moves()
                 s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
-                for i in range(len(possible_moves)):
-                    s += "\nMove " + str(i) + ": " + str(possible_moves[i])
+                for k in range(len(possible_moves)):
+                    s += "\nMove " + str(k) + ": " + str(possible_moves[k])
                 print(s)
-                move = input("select your move with its position (e.g 0 or 4)  in the list enter exit to cancel : ")
-                if move == "exit":
+                coup = input("select your move with its position (e.g 0 or 4)  in the list enter exit to cancel : ")
+                if coup == "exit":
                     continue 
-                if move.isdigit() and int(move) < len(possible_moves):
-                    m = possible_moves[int(move)]
+                if coup.isdigit() and int(coup) < len(possible_moves):
+                    m = possible_moves[int(coup)]
                     valid = True
                 else :
                     print("Invalid move, try again")
-            #traitement du coup (a faire)
+            self.board.squares[i][j].move(m)
             if to_play == 'black':
                 to_play = 'white'
                 return to_play, counter +1

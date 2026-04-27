@@ -91,9 +91,9 @@ class Pawn(Piece):
         i, j = self.position
         if self.first_move:
             #ajouter l'avancée de deux cases
-            m = Move(self.board, self.position, (i + 2 * direction, j), 'classic')
+            m = Move(self, self.position, (i + 2 * direction, j), 'classic')
             moves.append(m)
-        m = Move(self.board, self.position, (i + direction, j), 'classic')
+        m = Move(self, self.position, (i + direction, j), 'classic')
         moves.append(m)
         return moves
     
@@ -109,6 +109,7 @@ class Pawn(Piece):
         Complet (en théorie)
         """
         super().move(m)
+        self.first_move = False
         i,j = m.arrivee
         if m.type == 'promotion' or m.type == 'promoprise':
             #gestion de la promotion
@@ -160,6 +161,7 @@ class Rook(Piece):
         Complet (en théorie)
         """
         super().move(m)
+        self.first_move = False
 
 class Knight(Piece):
     """
@@ -275,6 +277,7 @@ class King(Piece):
         Complet (en théorie)
         """
         super().move(m)
+        self.first_move = False
         i,j = m.arrivee
         if m.type == 'castle':
             #gestion du roque

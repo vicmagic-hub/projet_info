@@ -30,17 +30,19 @@ class Piece:
         col = chr(ord('a') + j)
         return self.marque + col + str(i+1)
     
-    @abstractmethod
     def move(self, m):
         """
-        methode abstraite
-        dépend du type de pièce
+        méthode générale, évolue pour certaines pièces (ex : promotion du pion, roque du roi)
         reçoit une instanciation de Move
         traite le coup
         ATENTION : move ne connaît pas les règles du jeu, il se contente de réaliser un coup.
         C'est possible_moves qui fera le tri des coups possibles ou non
         """
-        pass
+        i,j = m.arrivee
+        k,l = m.piece.position
+        self.board.squares[k][l] = None
+        self.board.squares[i][j] = self
+        self.position = (i,j)
     
     @abstractmethod
     def possible_moves(self):
@@ -106,8 +108,8 @@ class Pawn(Piece):
             -Promotion
         Complet (en théorie)
         """
+        super().move(m)
         i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
         if m.type == 'promotion' or m.type == 'promoprise':
             #gestion de la promotion
             new_piece = input("Enter the piece you want to promote to (Q, R, B, N) : ")
@@ -120,17 +122,13 @@ class Pawn(Piece):
                 self.board.squares[i][j] = Bishop(self.color, (i,j), self.board)
             elif new_piece == 'N':
                 self.board.squares[i][j] = Knight(self.color, (i,j), self.board)
-        elif m.type == 'enpassant' :
-            #prise en passant
-            self.board.squares[i][j] = self
-            self.position = (i,j)
-            if self.color == 'white':
-                self.board.squares[i-1][j] = None
-        else:
-            #tout le reste
-            self.board.squares[i][j] = self
-            self.position = (i,j)
-            self.first_move = False
+        else : 
+            if m.type == 'enpassant' :
+                if self.color == 'white':
+                    self.board.squares[i-1][j] = None
+                else:
+                    self.board.squares[i+1][j] = None
+
 
 class Rook(Piece):
     """
@@ -161,10 +159,7 @@ class Rook(Piece):
             -Roque(traité par le Roi)
         Complet (en théorie)
         """
-        i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[i][j] = self
-        self.position = (i,j)
+        super().move(m)
 
 class Knight(Piece):
     """
@@ -192,10 +187,7 @@ class Knight(Piece):
             -Prise
         Complet (en théorie)
         """
-        i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[i][j] = self
-        self.position = (i,j)
+        super().move(m)
 
 class Bishop(Piece):
     """
@@ -223,10 +215,7 @@ class Bishop(Piece):
             -Prise
         Complet (en théorie)
         """
-        i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[i][j] = self
-        self.position = (i,j)
+        super().move(m)
 
 class Queen(Piece):
     """
@@ -254,10 +243,7 @@ class Queen(Piece):
             -Prise
         Complet (en théorie)
         """
-        i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
-        self.board.squares[i][j] = self
-        self.position = (i,j)
+        super().move(m)
 
 class King(Piece):
     """
@@ -288,13 +274,12 @@ class King(Piece):
             -Roque (gère aussi le mouvement de la tour concernée)
         Complet (en théorie)
         """
+        super().move(m)
         i,j = m.arrivee
-        self.board.squares[self.position[0]][self.position[1]] = None
         if m.type == 'castle':
             #gestion du roque
             if j == 6:
-                #petit roque 
-                self.board.squares[i][j] = self
+                #petit roque
                 #mouvement de la tour
                 self.board.squares[i][5] = self.board.squares[i][7]
                 self.board.squares[i][5].position = (i,5)
@@ -302,11 +287,7 @@ class King(Piece):
                 
             else:
                 #grand roque
-                self.board.squares[i][j] = self
                 #mouvement de la tour
                 self.board.squares[i][3] = self.board.squares[i][0]
                 self.board.squares[i][3].position = (i,3)
                 self.board.squares[i][0] = None
-        else:
-            self.board.squares[i][j] = self
-            self.position = (i,j)

@@ -5,9 +5,14 @@ from coup_encoder import Move
 
 class Piece:
     """
-    Classe de base pour les pièces d'échecs
+    Classe abstraite pour les pièces d'échecs
     """
     def __init__(self,color, position, board):
+        """
+        initialisation d'un pièce : 
+        Couleur, position, et échiquier
+        Contrôle de la présence dans les limites de l'échiquier
+        """
         self.color = color
         self.board = board
         self.position = position
@@ -17,20 +22,46 @@ class Piece:
         self.marque = 'PIECE'
 
     def __str__(self):
+        """
+        Fonction d'affichage de la pièce
+        renvoie "Nb5" ou "a3" par exemple
+        """
         i,j = self.position
         col = chr(ord('a') + j)
         return self.marque + col + str(i+1)
     
     @abstractmethod
     def move(self, m):
+        """
+        methode abstraite
+        dépend du type de pièce
+        reçoit une instanciation de Move
+        traite le coup
+        ATENTION : move ne connaît pas les règles du jeu, il se contente de réaliser un coup.
+        C'est possible_moves qui fera le tri des coups possibles ou non
+        """
         pass
     
     @abstractmethod
     def possible_moves(self):
+        """
+        méthode abstraite
+        dépend du type de pièce
+        construit une liste d'instanciation de Move possibles
+        """
         pass
     
 class Pawn(Piece):
+    """
+    Classe pion : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Un pion est une pièce, avec : 
+        -marque vide : son affichage renvoie simplement "a4" par exemple
+        -le symbole p (+ ou - suivant la couleur)
+        -une variable first_move pour la possibilité d'avancer de deux cases
+        """
         super().__init__(color, position, board)
         self.marque = ''
         if self.color == 'white':
@@ -40,18 +71,24 @@ class Pawn(Piece):
         self.first_move = True
     
     def possible_moves(self):
-        #proto methode
-        #ne gère pas les prises pour le moment
-        #ne gère pas la promotion pour le moment
         """
-        Méthode pour obtenir les mouvements possibles du pion
-        Renvoie une liste de futures positions possibles pour le pion
+        construit une liste d'instanciation de Move possibles
+        Actuellement traité : 
+            -Déplacement initial de deux cases
+            -Déplacement d'une case
+        Non géré pour le moment : 
+            -Promotion
+            -Collision avec une autre pièce
+            -Prise
+            -Prise en passant
+            -Mise en échec 
         """
         direction = 1
         if self.color == 'black': direction = -1
         moves = []
         i, j = self.position
         if self.first_move:
+            #ajouter l'avancée de deux cases
             m = Move(self.board, self.position, (i + 2 * direction, j), 'classic')
             moves.append(m)
         m = Move(self.board, self.position, (i + direction, j), 'classic')
@@ -59,6 +96,16 @@ class Pawn(Piece):
         return moves
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement simple d'une ou deux cases
+            -Prise
+            -Prise en passant
+            -Promotion
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         if m.type == 'promotion' or m.type == 'promoprise':
@@ -74,17 +121,28 @@ class Pawn(Piece):
             elif new_piece == 'N':
                 self.board.squares[i][j] = Knight(self.color, (i,j), self.board)
         elif m.type == 'enpassant' :
+            #prise en passant
             self.board.squares[i][j] = self
             self.position = (i,j)
             if self.color == 'white':
                 self.board.squares[i-1][j] = None
         else:
+            #tout le reste
             self.board.squares[i][j] = self
             self.position = (i,j)
             self.first_move = False
 
 class Rook(Piece):
+    """
+    Classe tour : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Une tour est une pièce, avec : 
+        -marque 'R' pour Rook : son affichage renvoie "Ra4" par exemple
+        -le symbole R (+ ou - suivant la couleur)
+        -une variable first_move pour la possibilité de roquer
+        """
         super().__init__(color, position, board)
         self.marque = 'R'
         if self.color == 'white':
@@ -94,13 +152,30 @@ class Rook(Piece):
         self.first_move = True
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+            -Roque(traité par le Roi)
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         self.board.squares[i][j] = self
         self.position = (i,j)
 
 class Knight(Piece):
+    """
+    Classe cavalier : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Un cavalier est une pièce, avec : 
+        -marque 'N' pour Knight : son affichage renvoie "Na4" par exemple
+        -le symbole N (+ ou - suivant la couleur)
+        """
         super().__init__(color, position, board)
         self.marque = 'N'
         if self.color == 'white':
@@ -109,13 +184,29 @@ class Knight(Piece):
             self.symbol = '-N'
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         self.board.squares[i][j] = self
         self.position = (i,j)
 
 class Bishop(Piece):
+    """
+    Classe fou : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Un fou est une pièce, avec : 
+        -marque 'B' pour Bishop : son affichage renvoie "Ba4" par exemple
+        -le symbole B (+ ou - suivant la couleur)
+        """
         super().__init__(color, position, board)
         self.marque = 'B'
         if self.color == 'white':
@@ -124,13 +215,29 @@ class Bishop(Piece):
             self.symbol = '-B'
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         self.board.squares[i][j] = self
         self.position = (i,j)
 
 class Queen(Piece):
+    """
+    Classe dame : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Une dame est une pièce, avec : 
+        -marque 'Q' pour Queen : son affichage renvoie "Qa4" par exemple
+        -le symbole Q (+ ou - suivant la couleur)
+        """
         super().__init__(color, position, board)
         self.marque = 'Q'
         if self.color == 'white':
@@ -139,13 +246,30 @@ class Queen(Piece):
             self.symbol = '-Q'
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         self.board.squares[i][j] = self
         self.position = (i,j)
 
 class King(Piece):
+    """
+    Classe roi : hérite de la classe pièce
+    """
     def __init__(self, color, position, board):
+        """
+        Un roi est une pièce, avec : 
+        -marque 'K' pour King : son affichage renvoie "Ka4" par exemple
+        -le symbole K (+ ou - suivant la couleur)
+        -une variable first_move pour la possibilité de roquer
+        """
         super().__init__(color, position, board)
         self.marque = 'K'
         if self.color == 'white':
@@ -155,6 +279,15 @@ class King(Piece):
         self.first_move = True
     
     def move(self, m):
+        """
+        reçoit une instanciation de Move
+        traite le mouvement
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+            -Roque (gère aussi le mouvement de la tour concernée)
+        Complet (en théorie)
+        """
         i,j = m.arrivee
         self.board.squares[self.position[0]][self.position[1]] = None
         if m.type == 'castle':
@@ -162,6 +295,7 @@ class King(Piece):
             if j == 6:
                 #petit roque 
                 self.board.squares[i][j] = self
+                #mouvement de la tour
                 self.board.squares[i][5] = self.board.squares[i][7]
                 self.board.squares[i][5].position = (i,5)
                 self.board.squares[i][7] = None
@@ -169,6 +303,7 @@ class King(Piece):
             else:
                 #grand roque
                 self.board.squares[i][j] = self
+                #mouvement de la tour
                 self.board.squares[i][3] = self.board.squares[i][0]
                 self.board.squares[i][3].position = (i,3)
                 self.board.squares[i][0] = None

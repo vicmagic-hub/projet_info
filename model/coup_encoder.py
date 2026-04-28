@@ -1,5 +1,3 @@
-from board import Board
-
 class Move():
     """
     Classe pour les coups

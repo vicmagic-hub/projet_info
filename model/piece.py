@@ -78,23 +78,39 @@ class Pawn(Piece):
         Actuellement traité : 
             -Déplacement initial de deux cases
             -Déplacement d'une case
-        Non géré pour le moment : 
-            -Promotion
             -Collision avec une autre pièce
             -Prise
-            -Prise en passant
+            -Promotion
+        Non géré pour le moment : 
+            -Prise en passant (doit attendre l'enregistrement des coups précédents pour vérifier la possibilité de ce coup)
             -Mise en échec 
         """
         direction = 1
         if self.color == 'black': direction = -1
         moves = []
         i, j = self.position
-        if self.first_move:
-            #ajouter l'avancée de deux cases
-            m = Move(self, self.position, (i + 2 * direction, j), 'classic')
+        if self.board.squares[i + direction][j] is None:
+            if (i + direction == 7*(self.color=='white')):
+                m = Move(self, self.position, (i + direction, j), 'promotion')
+            else:
+                m = Move(self, self.position, (i + direction, j), 'classic')
             moves.append(m)
-        m = Move(self, self.position, (i + direction, j), 'classic')
-        moves.append(m)
+            if self.first_move and self.board.squares[i + 2 * direction][j] is None:
+                #ajouter l'avancée de deux cases
+                m = Move(self, self.position, (i + 2 * direction, j), 'classic')
+                moves.append(m)
+        if j > 0 and self.board.squares[i + direction][j-1] is not None and self.board.test_color((i + direction, j-1)) != self.color:
+            if (i + direction == 7*(self.color=='white')):
+                m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
+            else:
+                m = Move(self, self.position, (i + direction, j-1), 'prise', captured_piece = self.board.squares[i + direction][j-1])
+            moves.append(m)
+        if j < 7 and self.board.squares[i + direction][j+1] is not None and self.board.test_color((i + direction, j+1)) != self.color:
+            if (i + direction == 7*(self.color=='white')):
+                m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
+            else:
+                m = Move(self, self.position, (i + direction, j+1), 'prise', captured_piece = self.board.squares[i + direction][j+1])
+            moves.append(m)
         return moves
     
     def move(self, m):
@@ -162,6 +178,71 @@ class Rook(Piece):
         """
         super().move(m)
         self.first_move = False
+
+    def possible_moves(self):
+        """
+        construit une liste d'instanciation de Move possibles
+        Actuellement traité : 
+            -Déplacement classique
+            -Prise
+        Non géré pour le moment : 
+            -Mise en échec 
+        """
+        moves = []
+        i, j = self.position
+        #déplacement vertical vers dans l'ordre des ligne croissantes
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7:
+            if self.board.squares[i+k+1][j] is None:
+                m = Move(self, self.position, (i+k+1, j), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j), 'prise', captured_piece = self.board.squares[i+k+1][j])
+                    moves.append(m)
+            k += 1
+        #déplacement vertical vers dans l'ordre des ligne décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0:
+            if self.board.squares[i-k-1][j] is None:
+                m = Move(self, self.position, (i-k-1, j), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j), 'prise', captured_piece = self.board.squares[i-k-1][j])
+                    moves.append(m)
+            k += 1
+        #déplacement horizontal vers dans l'ordre des ligne croissantes
+        occupied = False
+        k = 0
+        while not occupied and j+k < 7:
+            if self.board.squares[i][j+k+1] is None:
+                m = Move(self, self.position, (i, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i, j+k+1), 'prise', captured_piece = self.board.squares[i][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement horizontal vers dans l'ordre des ligne décroissantes
+        occupied = False
+        k = 0
+        while not occupied and j-k > 0:
+            if self.board.squares[i][j-k-1] is None:
+                m = Move(self, self.position, (i, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i, j-k-1), 'prise', captured_piece = self.board.squares[i][j-k-1])
+                    moves.append(m)
+            k += 1
+        return moves
 
 class Knight(Piece):
     """

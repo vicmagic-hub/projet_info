@@ -9,10 +9,12 @@ class Game():
     def __init__(self, name, type,opponent, side):
         """
         initialisation d'une partie :
-        création d'un plateau, nom de la partie, type de partie (local, online), adversaire (none si local), côté joué (white ou black)
+        création d'un historique des coups, d'un plateau, nom de la partie, 
+        type de partie (local, online), adversaire (none si local), côté joué (white ou black)
         initialisation des pièces sur le plateau
         TEMPORAIREMENT, quelques tours implémentés
         """
+        self.moves = []
         self.board = Board()
         self.name = name
         self.type = type
@@ -45,7 +47,7 @@ class Game():
         #initialisation des Rois
         Kw = King('white', (0, 4), self.board)
         Kb = King('black', (7, 4), self.board)
-        while not self.board.mat :
+        while not self.board.end :
             to_play, counter = self.tour(to_play, type, counter)
     
     
@@ -59,8 +61,10 @@ class Game():
             Sélection d'une pièce 
             Affichage des coups possibles pour cette pièce
             Sélection du coup à jouer
-            Traitement du coup (à faire)
+            Traitement du coup et mise à jour du plateau
             Passage au joueur suivant
+        A faire :
+            Gestion des échecs ? des mats, des nuls ? 
         """
         if type == "local":
             valid = False
@@ -88,11 +92,29 @@ class Game():
                     print("Invalid move, try again")
             self.board.squares[i][j].move(m)
             if to_play == 'black':
+                self.moves[-1].append(m)
                 to_play = 'white'
+                if self.name == "test":
+                    print(self)
                 return to_play, counter +1
             else :
+                self.moves.append([m])
                 to_play = 'black'
+                if self.name == "test":
+                    print(self)
                 return to_play, counter
+            
+    def __str__(self):
+        """
+        Affichage de la partie dans la console
+        """
+        s = "String d'intro de la partie encore non complète\n"
+        for i in range(len(self.moves)):
+            s += str(i+1) + " : "
+            for m in self.moves[i]:
+                s += str(m) + " "
+            s+= "\n"
+        return s
 
 #tests temporaires
 if __name__ == "__main__":

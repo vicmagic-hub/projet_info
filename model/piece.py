@@ -300,6 +300,71 @@ class Bishop(Piece):
         """
         super().move(m)
 
+    def possible_moves(self):
+        """
+        construit une liste d'instanciation de Move possibles
+        Actuellement traité : 
+            -Déplacement classique
+            -Prise
+        Non géré pour le moment : 
+            -Mise en échec 
+        """
+        moves = []
+        i, j = self.position
+        #déplacement diagonal vers dans l'ordre des ligne croissantes, colonnes croissantes
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7 and j+k < 7:
+            if self.board.squares[i+k+1][j+k+1] is None:
+                m = Move(self, self.position, (i+k+1, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j+k+1), 'prise', captured_piece = self.board.squares[i+k+1][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal vers dans l'ordre des ligne croissantes, colonnes décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7 and j-k > 0:
+            if self.board.squares[i+k+1][j-k-1] is None:
+                m = Move(self, self.position, (i+k+1, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j-k-1), 'prise', captured_piece = self.board.squares[i+k+1][j-k-1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal dans l'ordre des lignes décroissantes, colonnes croissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0 and j+k < 7:
+            if self.board.squares[i-k-1][j+k+1] is None:
+                m = Move(self, self.position, (i-k-1, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j+k+1), 'prise', captured_piece = self.board.squares[i-k-1][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal dans l'ordre des lignes décroissantes, colonnes décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0 and j-k > 0:
+            if self.board.squares[i-k-1][j-k-1] is None:
+                m = Move(self, self.position, (i-k-1, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j-k-1), 'prise', captured_piece = self.board.squares[i-k-1][j-k-1])
+                    moves.append(m)
+            k += 1
+        return moves
+
 class Queen(Piece):
     """
     Classe dame : hérite de la classe pièce
@@ -327,6 +392,124 @@ class Queen(Piece):
         Complet (en théorie)
         """
         super().move(m)
+
+
+    def possible_moves(self):
+        """
+        construit une liste d'instanciation de Move possibles
+        Actuellement traité : 
+            -Déplacement classique
+            -Prise
+        Non géré pour le moment : 
+            -Mise en échec 
+        """
+        moves = []
+        i, j = self.position
+        #déplacement vertical vers dans l'ordre des ligne croissantes
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7:
+            if self.board.squares[i+k+1][j] is None:
+                m = Move(self, self.position, (i+k+1, j), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j), 'prise', captured_piece = self.board.squares[i+k+1][j])
+                    moves.append(m)
+            k += 1
+        #déplacement vertical vers dans l'ordre des ligne décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0:
+            if self.board.squares[i-k-1][j] is None:
+                m = Move(self, self.position, (i-k-1, j), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j), 'prise', captured_piece = self.board.squares[i-k-1][j])
+                    moves.append(m)
+            k += 1
+        #déplacement horizontal vers dans l'ordre des ligne croissantes
+        occupied = False
+        k = 0
+        while not occupied and j+k < 7:
+            if self.board.squares[i][j+k+1] is None:
+                m = Move(self, self.position, (i, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i, j+k+1), 'prise', captured_piece = self.board.squares[i][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement horizontal vers dans l'ordre des ligne décroissantes
+        occupied = False
+        k = 0
+        while not occupied and j-k > 0:
+            if self.board.squares[i][j-k-1] is None:
+                m = Move(self, self.position, (i, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i, j-k-1), 'prise', captured_piece = self.board.squares[i][j-k-1])
+                    moves.append(m)
+            k += 1
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7 and j+k < 7:
+            if self.board.squares[i+k+1][j+k+1] is None:
+                m = Move(self, self.position, (i+k+1, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j+k+1), 'prise', captured_piece = self.board.squares[i+k+1][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal vers dans l'ordre des ligne croissantes, colonnes décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i+k < 7 and j-k > 0:
+            if self.board.squares[i+k+1][j-k-1] is None:
+                m = Move(self, self.position, (i+k+1, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i+k+1, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i+k+1, j-k-1), 'prise', captured_piece = self.board.squares[i+k+1][j-k-1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal dans l'ordre des lignes décroissantes, colonnes croissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0 and j+k < 7:
+            if self.board.squares[i-k-1][j+k+1] is None:
+                m = Move(self, self.position, (i-k-1, j+k+1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j+k+1)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j+k+1), 'prise', captured_piece = self.board.squares[i-k-1][j+k+1])
+                    moves.append(m)
+            k += 1
+        #déplacement diagonal dans l'ordre des lignes décroissantes, colonnes décroissantes
+        occupied = False
+        k = 0
+        while not occupied and i-k > 0 and j-k > 0:
+            if self.board.squares[i-k-1][j-k-1] is None:
+                m = Move(self, self.position, (i-k-1, j-k-1), 'classic')
+                moves.append(m)
+            else:
+                occupied = True
+                if self.board.test_color((i-k-1, j-k-1)) != self.color:
+                    m = Move(self, self.position, (i-k-1, j-k-1), 'prise', captured_piece = self.board.squares[i-k-1][j-k-1])
+                    moves.append(m)
+            k += 1
+        return moves
+
 
 class King(Piece):
     """

@@ -31,13 +31,17 @@ class Move():
             else:
                 s+= "O-O-O"
         elif self.type == 'promotion':
-            assert self.promotion_piece in ['Q', 'R', 'B', 'N'], "Invalid promotion piece, must be one of Q, R, B, N"
-            s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+            if self.promotion_piece in ['Q', 'R', 'B', 'N']:
+                s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+            else:
+                s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1) + '= ?'
         elif self.type == 'prise':
             s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1)
         elif self.type == 'promoprise':
-            assert self.promotion_piece in ['Q', 'R', 'B', 'N'], "Invalid promotion piece, must be one of Q, R, B, N"
-            s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+            if self.promotion_piece in ['Q', 'R', 'B', 'N']:
+                s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+            else:
+                s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
         else:
             s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1)
         return s

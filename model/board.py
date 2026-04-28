@@ -21,6 +21,15 @@ class Board:
         i, j = position
         return self.squares[i][j] != None
     
+    def test_color(self, position):
+        """
+        Méthode pour tester la couleur d'une pièce sur une case de position (i,j) sur le plateau
+        """
+        i, j = position
+        if self.squares[i][j] is None:
+            return None
+        return self.squares[i][j].color
+    
     def __str__(self):
         """
         Affichage du plateau dans la console

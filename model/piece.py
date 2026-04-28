@@ -81,30 +81,45 @@ class Pawn(Piece):
             -Collision avec une autre pièce
             -Prise
             -Promotion
+            -Prise en passant
         Non géré pour le moment : 
-            -Prise en passant (doit attendre l'enregistrement des coups précédents pour vérifier la possibilité de ce coup)
             -Mise en échec 
         """
         direction = 1
         if self.color == 'black': direction = -1
         moves = []
         i, j = self.position
+        #avancée classique d'une case
         if self.board.squares[i + direction][j] is None:
+            #promotion
             if (i + direction == 7*(self.color=='white')):
                 m = Move(self, self.position, (i + direction, j), 'promotion')
+            #normal
             else:
                 m = Move(self, self.position, (i + direction, j), 'classic')
             moves.append(m)
             if self.first_move and self.board.squares[i + 2 * direction][j] is None:
                 #ajouter l'avancée de deux cases
-                m = Move(self, self.position, (i + 2 * direction, j), 'classic')
+                m = Move(self, self.position, (i + 2 * direction, j), 'doublepion')
                 moves.append(m)
+        #gestion du EN-PASSANT 
+        if i == 4*(self.color == 'white') + 3*(self.color == 'black'):
+            #coté gauche pour les blancs, coté droit pour les noirs
+            if j > 0 and self.board.squares[i][j-direction] is not None and isinstance(self.board.squares[i][j-1], Pawn) and self.board.squares[i][j-1].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-1):
+                m = Move(self, self.position, (i+direction, j-direction), 'enpassant', captured_piece = self.board.squares[i][j-direction])
+                moves.append(m)
+            #coté droit pour les blancs, coté gauche pour les noirs
+            if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+1], Pawn) and self.board.squares[i][j+1].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+1):
+                m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
+                moves.append(m)  
+        #gestion de la prise du coté gauche pour les blancs, du coté droit pour les noirs
         if j > 0 and self.board.squares[i + direction][j-1] is not None and self.board.test_color((i + direction, j-1)) != self.color:
             if (i + direction == 7*(self.color=='white')):
                 m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
             else:
                 m = Move(self, self.position, (i + direction, j-1), 'prise', captured_piece = self.board.squares[i + direction][j-1])
             moves.append(m)
+        #gestion de la prise du coté droit pour les blancs, du coté gauche pour les noirs
         if j < 7 and self.board.squares[i + direction][j+1] is not None and self.board.test_color((i + direction, j+1)) != self.color:
             if (i + direction == 7*(self.color=='white')):
                 m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])

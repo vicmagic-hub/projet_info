@@ -6,7 +6,7 @@ class Move():
         """
         initialisation d'un coup : 
         pièce, position de départ, position d'arrivée, 
-        type de coup (normal, prise, enpassant, promotion, promoprise, castle),
+        type de coup (normal, prise, enpassant, promotion, promoprise, castle, doublepion),
         éventuelle pièce capturée, éventuelle pièce de promotion si besoin
         """""
         self.piece = piece
@@ -24,6 +24,8 @@ class Move():
         piece = self.piece
         i,j = self.depart
         l,k = self.arrivee
+        col = chr(ord('a') + j)
+        p = piece.marque + col + str(i+1)
         s = ""
         if self.type == 'castle':
             if j == 6:
@@ -32,16 +34,16 @@ class Move():
                 s+= "O-O-O"
         elif self.type == 'promotion':
             if self.promotion_piece in ['Q', 'R', 'B', 'N']:
-                s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+                s+= + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
             else:
-                s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1) + '= ?'
-        elif self.type == 'prise':
-            s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1)
+                s+= p + "->" + chr(ord('a') + k) + str(l+1) + '= ?'
+        elif self.type == 'prise' or self.type == 'enpassant':
+            s+= p + 'x' + chr(ord('a') + k) + str(l+1)
         elif self.type == 'promoprise':
             if self.promotion_piece in ['Q', 'R', 'B', 'N']:
-                s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+                p + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
             else:
-                s+= str(piece) + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
+                p + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
         else:
-            s+= str(piece) + "->" + chr(ord('a') + k) + str(l+1)
+            s+= p + "->" + chr(ord('a') + k) + str(l+1)
         return s

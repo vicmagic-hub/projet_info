@@ -8,11 +8,13 @@ class Board:
         création de squares pour stocker les pièces
         création de white & black_attacked pour stocker les cases attaquées pa les blancs où noirs
         création de la variable mat (fin de partie)
+        création de la variable last_move pour stocker le dernier coup joué (pour la gestion du en passant)
         """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.white_attacked = [[False for _ in range(8)] for _ in range(8)]
         self.black_attacked = [[False for _ in range(8)] for _ in range(8)]
         self.end = False
+        self.last_move = None
     
     def test_case(self, position):
         """

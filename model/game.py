@@ -93,15 +93,13 @@ class Game():
             self.board.squares[i][j].move(m)
             if to_play == 'black':
                 self.moves[-1].append(m)
+                self.board.last_move = m
                 to_play = 'white'
-                if self.name == "test":
-                    print(self)
                 return to_play, counter +1
             else :
                 self.moves.append([m])
+                self.board.last_move = m
                 to_play = 'black'
-                if self.name == "test":
-                    print(self)
                 return to_play, counter
             
     def __str__(self):

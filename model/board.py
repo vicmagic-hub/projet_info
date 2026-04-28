@@ -12,7 +12,7 @@ class Board:
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.white_attacked = [[False for _ in range(8)] for _ in range(8)]
         self.black_attacked = [[False for _ in range(8)] for _ in range(8)]
-        self.mat = False
+        self.end = False
     
     def test_case(self, position):
         """

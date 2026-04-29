@@ -6,16 +6,89 @@ class Board:
         """
         initialisation d'un plateau : 
         création de squares pour stocker les pièces
-        création de white & black_attacked pour stocker les cases attaquées pa les blancs où noirs
         création de la variable mat (fin de partie)
         création de la variable last_move pour stocker le dernier coup joué (pour la gestion du en passant)
         """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
-        self.white_attacked = [[False for _ in range(8)] for _ in range(8)]
-        self.black_attacked = [[False for _ in range(8)] for _ in range(8)]
         self.end = False
         self.last_move = None
+        self.white_king = None
+        self.black_king = None
     
+    def apply_move(self, m):
+        m.piece.move(m)
+        self.last_move = m
+    
+    def undo_last_move(self,moves):
+        m = self.last_move
+        if m.type == 'classic' or m.type == 'doublepion' :
+            m.piece.position = m.depart
+            self.squares[m.depart[0]][m.depart[1]] = m.piece
+            self.squares[m.arrivee[0]][m.arrivee[1]] = None
+        if m.type == 'prise' or m.type == 'promoprise' :
+            m.piece.position = m.depart
+            self.squares[m.depart[0]][m.depart[1]] = m.piece
+            self.squares[m.arrivee[0]][m.arrivee[1]] = m.captured_piece
+        if m.type == 'promotion':
+            m.piece.position = m.depart
+            self.squares[m.depart[0]][m.depart[1]] = m.piece
+            self.squares[m.arrivee[0]][m.arrivee[1]] = None
+        if m.type == 'enpassant' :
+            if m.piece.color == 'white':
+                self.squares[m.arrivee[0]-1][m.arrivee[1]] = m.captured_piece
+            else:
+                self.squares[m.arrivee[0]+1][m.arrivee[1]] = m.captured_piece
+            m.piece.position = m.depart
+            self.squares[m.depart[0]][m.depart[1]] = m.piece
+            self.squares[m.arrivee[0]][m.arrivee[1]] = None
+        if m.type == 'castle' : 
+            m.piece.position = m.depart
+            if m.arrivee[1] == 6:
+                #gestion du roi
+                m.piece.position = m.depart
+                self.squares[m.depart[0]][m.depart[1]] = m.piece
+                self.squares[m.arrivee[0]][m.arrivee[1]] = None
+                #gestion de la tour
+                tour=self.squares[m.arrivee[0]][5]
+                tour.position = (m.arrivee[0],7)
+                self.squares[m.arrivee[0][7]] = tour
+                self.squares[m.arrivee[0][5]] = None
+            else:
+                #gestion du roi
+                m.piece.position = m.depart
+                self.squares[m.depart[0]][m.depart[1]] = m.piece
+                self.squares[m.arrivee[0]][m.arrivee[1]] = None
+                #gestion de la tour
+                tour=self.squares[m.arrivee[0]][3]
+                tour.position = (m.arrivee[0],0)
+                self.squares[m.arrivee[0][0]] = tour
+                self.squares[m.arrivee[0][3]] = None
+        if m.arrivee==self.white_king : 
+            self.white_king = m.depart
+        if m.arrivee==self.black_king : 
+            self.black_king = m.depart
+        if m.piece.color == 'black':
+            moves[-1].pop()
+            self.last_move = moves[-1][0] 
+        else :
+            moves.pop()
+            if len(moves) == 0 : self.last_move = None  
+            else : self.last_move = moves[-1][1]
+        if m.piece.first_move is not None : 
+            m.piece.first_move = not self.already_moved(m.piece, moves)
+        return moves
+            
+    
+    def already_moved(self, piece, moves):
+        for two_moves in moves:
+            for move in two_moves:
+                if move.piece == piece:
+                    return True
+        return False
+
+            
+            
+
     def test_case(self, position):
         """
         Méthode pour tester l'occupation d'une case de position (i,j) sur le plateau
@@ -31,6 +104,18 @@ class Board:
         if self.squares[i][j] is None:
             return None
         return self.squares[i][j].color
+    
+    def white_pieces(self):
+        """
+        Méthode qui récupère la liste des pièces blanches sur le plateau
+        """
+        return [self.squares[i][j] for i in range(8) for j in range(8) if self.test_color((i,j)) == 'white']
+    
+    def black_pieces(self):
+        """
+        Méthode qui récupère la liste des pièces black sur le plateau
+        """
+        return [self.squares[i][j] for i in range(8) for j in range(8) if self.test_color((i,j)) == 'black']
     
     def __str__(self):
         """

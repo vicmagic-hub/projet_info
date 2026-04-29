@@ -46,9 +46,12 @@ class Game():
         Qb = Queen('black', (7, 3), self.board)
         #initialisation des Rois
         Kw = King('white', (0, 4), self.board)
+        self.board.white_king = (0,4)
         Kb = King('black', (7, 4), self.board)
+        self.board.black_king = (7,4)
         while not self.board.end :
             to_play, counter = self.tour(to_play, type, counter)
+        print(self)
     
     
     def tour (self, to_play, type, counter):
@@ -73,6 +76,20 @@ class Game():
                 print(self.board)
             while valid == False:
                 s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
+                if s == "resign":
+                    print (to_play + " resigns")
+                    self.board.end = True
+                    return to_play, counter
+                if s == "z" :
+                    if len(self.moves) == 0 : 
+                        continue
+                    erased_color = self.board.last_move.piece.color
+                    self.moves = self.board.undo_last_move(self.moves)
+                    if erased_color == 'black' :
+                        return 'black', counter
+                    else :
+                        return 'white', counter -1
+                    
                 i, j = int(s[1])-1, ord(s[0])-ord('a')
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
@@ -90,15 +107,13 @@ class Game():
                     valid = True
                 else :
                     print("Invalid move, try again")
-            self.board.squares[i][j].move(m)
+            self.board.apply_move(m)
             if to_play == 'black':
                 self.moves[-1].append(m)
-                self.board.last_move = m
                 to_play = 'white'
                 return to_play, counter +1
             else :
                 self.moves.append([m])
-                self.board.last_move = m
                 to_play = 'black'
                 return to_play, counter
             

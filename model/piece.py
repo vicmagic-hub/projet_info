@@ -20,6 +20,7 @@ class Piece:
         assert 0 <= i < 8 and 0 <= j < 8, "Invalid position, out of bounds "
         self.board.squares[i][j] = self
         self.marque = 'PIECE'
+        self.first_move=None
 
     def __str__(self):
         """
@@ -62,7 +63,6 @@ class Pawn(Piece):
         Un pion est une pièce, avec : 
         -marque vide : son affichage renvoie simplement "a4" par exemple
         -le symbole p (+ ou - suivant la couleur)
-        -une variable first_move pour la possibilité d'avancer de deux cases
         """
         super().__init__(color, position, board)
         self.marque = ''
@@ -70,7 +70,6 @@ class Pawn(Piece):
             self.symbol = '+p'
         else:
             self.symbol = '-p'
-        self.first_move = True
     
     def possible_moves(self):
         """
@@ -98,18 +97,22 @@ class Pawn(Piece):
             else:
                 m = Move(self, self.position, (i + direction, j), 'classic')
             moves.append(m)
-            if self.first_move and self.board.squares[i + 2 * direction][j] is None:
+            start_row = 1 if self.color == 'white' else 6
+            if (i== start_row) and self.board.squares[i + 2 * direction][j] is None:
                 #ajouter l'avancée de deux cases
                 m = Move(self, self.position, (i + 2 * direction, j), 'doublepion')
                 moves.append(m)
-        #gestion du EN-PASSANT 
-        if i == 4*(self.color == 'white') + 3*(self.color == 'black'):
+        #gestion du EN-PASSANT
+        row = 4 if self.color == 'white' else 3
+        if i == row:
             #coté gauche pour les blancs, coté droit pour les noirs
             if j > 0 and self.board.squares[i][j-direction] is not None and isinstance(self.board.squares[i][j-direction], Pawn) and self.board.squares[i][j-direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-direction):
                 m = Move(self, self.position, (i+direction, j-direction), 'enpassant', captured_piece = self.board.squares[i][j-direction])
                 moves.append(m)
             #coté droit pour les blancs, coté gauche pour les noirs
+            print("on y est")
             if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+direction], Pawn) and self.board.squares[i][j+direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
+                print("in")
                 m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
                 moves.append(m)  
         #gestion de la prise du coté gauche pour les blancs, du coté droit pour les noirs
@@ -140,7 +143,6 @@ class Pawn(Piece):
         Complet (en théorie)
         """
         super().move(m)
-        self.first_move = False
         i,j = m.arrivee
         if m.type == 'promotion' or m.type == 'promoprise':
             #gestion de la promotion
@@ -558,6 +560,10 @@ class King(Piece):
         super().move(m)
         self.first_move = False
         i,j = m.arrivee
+        if self.color == 'white':
+            self.board.white_king = (i,j)
+        else :
+            self.board.black_king = (i,j)
         if m.type == 'castle':
             #gestion du roque
             if j == 6:

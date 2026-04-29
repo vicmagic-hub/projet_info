@@ -105,11 +105,11 @@ class Pawn(Piece):
         #gestion du EN-PASSANT 
         if i == 4*(self.color == 'white') + 3*(self.color == 'black'):
             #coté gauche pour les blancs, coté droit pour les noirs
-            if j > 0 and self.board.squares[i][j-direction] is not None and isinstance(self.board.squares[i][j-1], Pawn) and self.board.squares[i][j-1].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-1):
+            if j > 0 and self.board.squares[i][j-direction] is not None and isinstance(self.board.squares[i][j-direction], Pawn) and self.board.squares[i][j-direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-direction):
                 m = Move(self, self.position, (i+direction, j-direction), 'enpassant', captured_piece = self.board.squares[i][j-direction])
                 moves.append(m)
             #coté droit pour les blancs, coté gauche pour les noirs
-            if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+1], Pawn) and self.board.squares[i][j+1].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+1):
+            if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+direction], Pawn) and self.board.squares[i][j+direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
                 m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
                 moves.append(m)  
         #gestion de la prise du coté gauche pour les blancs, du coté droit pour les noirs

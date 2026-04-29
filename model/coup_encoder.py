@@ -41,9 +41,9 @@ class Move():
             s+= p + 'x' + chr(ord('a') + k) + str(l+1)
         elif self.type == 'promoprise':
             if self.promotion_piece in ['Q', 'R', 'B', 'N']:
-                p + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
+                s+= p + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
             else:
-                p + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
+                s+= p + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
         else:
             s+= p + "->" + chr(ord('a') + k) + str(l+1)
         return s

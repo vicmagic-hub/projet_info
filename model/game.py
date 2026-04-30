@@ -89,7 +89,19 @@ class Game():
                         return 'black', counter
                     else :
                         return 'white', counter -1
-                    
+                if s== "Z" :
+                    if len(self.moves) == 0 : 
+                        continue
+                    erased_color = self.board.last_move.piece.color
+                    self.moves = self.board.undo_last_move(self.moves)
+                    if len(self.moves) == 0 : 
+                        continue
+                    erased_color = self.board.last_move.piece.color
+                    self.moves = self.board.undo_last_move(self.moves)
+                    if erased_color == 'black' :
+                        return 'black', counter
+                    else :
+                        return 'white', counter -1
                 i, j = int(s[1])-1, ord(s[0])-ord('a')
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")

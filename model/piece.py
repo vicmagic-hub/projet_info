@@ -53,6 +53,21 @@ class Piece:
         construit une liste d'instanciation de Move possibles
         """
         pass
+
+    def attacked_cases(self):
+        """
+        méthode pour afficher les cases attaquées par la pièce
+        """
+        moves = self.possible_moves()
+        attacked = []
+        for m in moves:
+            if m.type == 'prise' or m.type == 'enpassant' or m.type == 'promoprise':
+                attacked.append(m.captured_piece.position)
+            elif isinstance (m.piece, Pawn) == True : 
+                pass
+            else :
+                attacked.append(m.arrivee)
+        return attacked
     
 class Pawn(Piece):
     """

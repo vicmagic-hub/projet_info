@@ -76,8 +76,7 @@ class Board:
             else : self.last_move = moves[-1][1]
         if m.piece.first_move is not None : 
             m.piece.first_move = not self.already_moved(m.piece, moves)
-        return moves
-            
+        return moves   
     
     def already_moved(self, piece, moves):
         for two_moves in moves:
@@ -86,9 +85,41 @@ class Board:
                     return True
         return False
 
-            
-            
-
+    def is_attacked_by(self, case, color) :    
+        """
+        Méthode pour tester si une case est attaquée par une pièce de la couleur
+        """
+        if color == 'white' : 
+            for piece in self.white_pieces() :
+                if case in piece.attacked_cases() :
+                    return True
+        else : 
+            for piece in self.black_pieces() :
+                if case in piece.attacked_cases() :
+                    return True
+        return False
+    
+    def simulate_move(self,move, moves):
+        """
+        Methode pour simuler un coup, et renvoyer True si il est valide (ne met pas le roi en échec), False sinon
+        annulation du coup ensuite
+        """
+        self.apply_move(move)
+        if move.piece.color == 'white' :
+            if self.is_attacked_by(self.white_king, 'black'):
+                self.undo_last_move(moves)
+                return False
+            else :
+                self.undo_last_move(moves)
+                return True
+        else :
+            if self.is_attacked_by(self.black_king, 'white'):
+                self.undo_last_move(moves)
+                return False
+            else :
+                self.undo_last_move(moves)
+                return True
+                
     def test_case(self, position):
         """
         Méthode pour tester l'occupation d'une case de position (i,j) sur le plateau

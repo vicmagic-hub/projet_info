@@ -289,6 +289,77 @@ class Knight(Piece):
         """
         super().move(m)
 
+    def possible_moves(self):
+        moves = []
+        i, j = self.position
+        # 8 déplacements possibles
+        #1
+        if (i+2)<=7 and (j+1)<=7 :
+            if self.board.squares[i + 2][j + 1] is None:
+                m = Move(self, self.position, (i + 2, j + 1), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i + 2, j + 1)) != self.color:
+                m = Move(self, self.position, (i + 2, j + 1), 'prise', captured_piece=self.board.squares[i + 2][j + 1])
+                moves.append(m)
+        #2
+        if (i+2)<=7 and 0<=(j-1)<=7 :
+            if self.board.squares[i + 2][j - 1] is None:
+                m = Move(self, self.position, (i + 2, j - 1), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i + 2, j - 1)) != self.color:
+                m = Move(self, self.position, (i + 2, j - 1), 'prise', captured_piece=self.board.squares[i + 2][j - 1])
+                moves.append(m)
+        #3
+        if (i+1)<=7 and 0<=(j-2)<=7 :
+            if self.board.squares[i + 1][j - 2] is None:
+                m = Move(self, self.position, (i + 1, j - 2), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i + 1, j - 2)) != self.color:
+                m = Move(self, self.position, (i + 1, j - 2), 'prise', captured_piece=self.board.squares[i + 1][j - 2])
+                moves.append(m)
+
+        #4
+        if 0<=(i-1)<=7 and 0<=(j-2)<=7 :
+            if self.board.squares[i - 1][j - 2] is None:
+                m = Move(self, self.position, (i - 1, j - 2), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i - 1, j - 2)) != self.color:
+                m = Move(self, self.position, (i - 1, j - 2), 'prise', captured_piece=self.board.squares[i - 1][j - 2])
+                moves.append(m)
+        #5
+        if 0<=(i-2)<=7 and 0<=(j-1)<=7 :
+            if self.board.squares[i - 2][j - 1] is None:
+                m = Move(self, self.position, (i - 2, j - 1), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i - 2, j - 1)) != self.color:
+                m = Move(self, self.position, (i - 2, j - 1), 'prise', captured_piece=self.board.squares[i - 2][j - 1])
+                moves.append(m)
+        #6
+        if 0<=(i-2)<=7 and (j+1)<=7 :
+            if self.board.squares[i - 2][j + 1] is None:
+                m = Move(self, self.position, (i - 2, j + 1), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i - 2, j + 1)) != self.color:
+                m = Move(self, self.position, (i - 2, j + 1), 'prise', captured_piece=self.board.squares[i - 2][j + 1])
+                moves.append(m)
+        #7
+        if 0<=(i-1)<=7 and (j+2)<=7 :
+            if self.board.squares[i - 1][j + 2] is None:
+                m = Move(self, self.position, (i - 1, j + 2), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i - 1, j + 2)) != self.color:
+                m = Move(self, self.position, (i - 1, j + 2), 'prise', captured_piece=self.board.squares[i - 1][j + 2])
+                moves.append(m)
+        #8
+        if (i+1)<=7 and (j+2)<=7 :
+            if self.board.squares[i + 1][j + 2] is None:
+                m = Move(self, self.position, (i + 1, j + 2), 'classic')
+                moves.append(m)
+            elif self.board.test_color((i + 1, j + 2)) != self.color:
+                m = Move(self, self.position, (i + 1, j + 2), 'prise', captured_piece=self.board.squares[i + 1][j + 2])
+                moves.append(m)
+        return moves
+
 class Bishop(Piece):
     """
     Classe fou : hérite de la classe pièce

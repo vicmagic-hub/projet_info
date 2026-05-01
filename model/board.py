@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 class Board:
     """
     Classe pour le plateaux
@@ -51,8 +53,8 @@ class Board:
                 #gestion de la tour
                 tour=self.squares[m.arrivee[0]][5]
                 tour.position = (m.arrivee[0],7)
-                self.squares[m.arrivee[0][7]] = tour
-                self.squares[m.arrivee[0][5]] = None
+                self.squares[m.arrivee[0]][7] = tour
+                self.squares[m.arrivee[0]][5] = None
             else:
                 #gestion du roi
                 m.piece.position = m.depart
@@ -61,8 +63,8 @@ class Board:
                 #gestion de la tour
                 tour=self.squares[m.arrivee[0]][3]
                 tour.position = (m.arrivee[0],0)
-                self.squares[m.arrivee[0][0]] = tour
-                self.squares[m.arrivee[0][3]] = None
+                self.squares[m.arrivee[0]][0] = tour
+                self.squares[m.arrivee[0]][3] = None
         if m.arrivee==self.white_king : 
             self.white_king = m.depart
         if m.arrivee==self.black_king : 
@@ -99,26 +101,26 @@ class Board:
                     return True
         return False
     
-    def simulate_move(self,move, moves):
+    def simulate(self,move, moves):
         """
         Methode pour simuler un coup, et renvoyer True si il est valide (ne met pas le roi en échec), False sinon
         annulation du coup ensuite
         """
+        actual_state = deepcopy(moves)
         self.apply_move(move)
         if move.piece.color == 'white' :
-            if self.is_attacked_by(self.white_king, 'black'):
-                self.undo_last_move(moves)
-                return False
-            else :
-                self.undo_last_move(moves)
-                return True
+            valid = not self.is_attacked_by(self.white_king, 'black')
+            actual_state.append([move])
+            self.last_move = move
+            actual_state = self.undo_last_move(actual_state)
+            return valid
         else :
-            if self.is_attacked_by(self.black_king, 'white'):
-                self.undo_last_move(moves)
-                return False
-            else :
-                self.undo_last_move(moves)
-                return True
+            valid = not self.is_attacked_by(self.black_king, 'white')
+            actual_state[-1].append(move)
+            self.last_move = move
+            actual_state = self.undo_last_move(actual_state)
+            return valid 
+
                 
     def test_case(self, position):
         """

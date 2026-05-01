@@ -7,7 +7,7 @@ class Move():
         initialisation d'un coup : 
         pièce, position de départ, position d'arrivée, 
         type de coup (normal, prise, enpassant, promotion, promoprise, castle, doublepion),
-        éventuelle pièce capturée, éventuelle pièce de promotion si besoin
+        éventuelle pièce capturée, éventuelle pièce de promotion
         """""
         self.piece = piece
         self.depart = depart

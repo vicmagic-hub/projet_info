@@ -943,74 +943,90 @@ class King(Piece):
                 self.board.squares[i][3].position = (i,3)
                 self.board.squares[i][0] = None
 
-    def possible_moves(self):
-        moves = []
+    def possible_moves(self, moves):
+        move_list = []
         i, j = self.position
         # 8 déplacements possibles
         #1
         if (i+1)<=7 and (j)<=7 :
             if self.board.squares[i + 1][j] is None:
                 m = Move(self, self.position, (i + 1, j), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i + 1, j)) != self.color:
                 m = Move(self, self.position, (i + 1, j), 'prise', captured_piece=self.board.squares[i + 1][j])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #2
         if 0<=(i-1)<=7 and (j)<=7 :
             if self.board.squares[i - 1][j] is None:
                 m = Move(self, self.position, (i - 1, j), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i - 1, j)) != self.color:
                 m = Move(self, self.position, (i - 1, j), 'prise', captured_piece=self.board.squares[i - 1][j])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #3
         if (i)<=7 and 0<=(j+1)<=7 :
             if self.board.squares[i][j + 1] is None:
                 m = Move(self, self.position, (i, j + 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i, j + 1)) != self.color:
                 m = Move(self, self.position, (i, j + 1), 'prise', captured_piece=self.board.squares[i][j + 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #4
         if 0<=(i)<=7 and 0<=(j-1)<=7 :
             if self.board.squares[i][j - 1] is None:
                 m = Move(self, self.position, (i, j - 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i, j - 1)) != self.color:
                 m = Move(self, self.position, (i, j - 1), 'prise', captured_piece=self.board.squares[i][j - 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #5
         if 0<=(i+1)<=7 and 0<=(j+1)<=7 :
             if self.board.squares[i + 1][j + 1] is None:
                 m = Move(self, self.position, (i + 1, j + 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i + 1, j + 1)) != self.color:
                 m = Move(self, self.position, (i + 1, j + 1), 'prise', captured_piece=self.board.squares[i + 1][j + 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #6
         if 0<=(i+1)<=7 and 0<=(j-1)<=7 :
             if self.board.squares[i + 1][j - 1] is None:
                 m = Move(self, self.position, (i + 1, j - 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i + 1, j - 1)) != self.color:
                 m = Move(self, self.position, (i + 1, j - 1), 'prise', captured_piece=self.board.squares[i + 1][j - 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #7
         if 0<=(i-1)<=7 and (j+1)<=7 :
             if self.board.squares[i - 1][j + 1] is None:
                 m = Move(self, self.position, (i - 1, j + 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i - 1, j + 1)) != self.color:
                 m = Move(self, self.position, (i - 1, j + 1), 'prise', captured_piece=self.board.squares[i - 1][j + 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #8
         if 0<=(i-1)<=7 and 0<=(j-1)<=7 :
             if self.board.squares[i - 1][j - 1] is None:
                 m = Move(self, self.position, (i - 1, j - 1), 'classic')
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
             elif self.board.test_color((i - 1, j - 1)) != self.color:
                 m = Move(self, self.position, (i - 1, j - 2), 'prise', captured_piece=self.board.squares[i - 1][j - 1])
-                moves.append(m)
+                if self.board.simulate(m, moves):
+                    move_list.append(m)
         #Petit roque : Regarder si le roi a bougé/si y'a une tour/si elle a bougé/si c'est vide entre les deux/Si les cases traversée par le roi sont attaquées/
         if self.first_move :
             if isinstance(self.board.squares[i][j+3], Rook) :
@@ -1018,7 +1034,8 @@ class King(Piece):
                     if self.board.squares[i][j+1] is None and self.board.squares[i][j+2] is None :
                         if (not self.board.is_attacked_by((i,j+1), "white") and self.color=="black") or (not self.board.is_attacked_by((i,j+1), "black") and self.color=="white"):
                             m=Move(self, self.position, (i, j+2), 'castle')
-                            moves.append(m)
+                            if self.board.simulate(m, moves):
+                                move_list.append(m)
         # grand roque : Regarder si le roi a bougé/si y'a une tour/si elle a bougé/si c'est vide entre les deux/Si les cases traversée par le roi sont attaquées/
         if self.first_move:
             if isinstance(self.board.squares[i][j - 4], Rook):
@@ -1026,8 +1043,9 @@ class King(Piece):
                     if self.board.squares[i][j - 1] is None and self.board.squares[i][j - 2] is None and self.board.squares[i][j - 3] is None:
                         if (not self.board.is_attacked_by((i, j - 1), "white") and self.color == "black") or (not self.board.is_attacked_by((i, j - 1), "black") and self.color == "white"):
                             m = Move(self, self.position, (i, j - 2), 'castle')
-                            moves.append(m)
-        return moves
+                            if self.board.simulate(m, moves):
+                                move_list.append(m)
+        return move_list
 
     def attacked_cases(self):
         """

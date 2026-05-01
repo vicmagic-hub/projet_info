@@ -102,12 +102,19 @@ class Game():
                         return 'black', counter
                     else :
                         return 'white', counter -1
+                if len(s) != 2 or ord('h')<ord(s[0]) or ord('a')>ord(s[0]) or 0>int(s[1]) or 8<int(s[1]) :
+                    print("invalid case : make sure to tap something like: h1")
+                    continue
                 i, j = int(s[1])-1, ord(s[0])-ord('a')
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
                     continue
-                possible_moves = self.board.squares[i][j].possible_moves()
-                s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
+                possible_moves = self.board.squares[i][j].possible_moves(self.moves)
+                if len (possible_moves) >0 :
+                    s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
+                else : 
+                    print("no possible move for", self.board.squares[i][j])
+                    continue
                 for k in range(len(possible_moves)):
                     s += "\nMove " + str(k) + ": " + str(possible_moves[k])
                 print(s)

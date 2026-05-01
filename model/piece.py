@@ -89,8 +89,8 @@ class Pawn(Piece):
             -Prise
             -Promotion
             -Prise en passant
-        Non géré pour le moment : 
             -Mise en échec 
+        COMPLET            
         """
         direction = 1
         if self.color == 'black': direction = -1
@@ -228,8 +228,8 @@ class Rook(Piece):
         Actuellement traité : 
             -Déplacement classique
             -Prise
-        Non géré pour le moment : 
             -Mise en échec 
+        COMPLET
         """
         move_list = []
         i, j = self.position
@@ -524,8 +524,8 @@ class Bishop(Piece):
         Actuellement traité : 
             -Déplacement classique
             -Prise
-        Non géré pour le moment : 
             -Mise en échec 
+            COMPLET            
         """
         move_list = []
         i, j = self.position
@@ -674,8 +674,9 @@ class Queen(Piece):
         Actuellement traité : 
             -Déplacement classique
             -Prise
-        Non géré pour le moment : 
             -Mise en échec 
+        COMPLET
+            
         """
         move_list = []
         i, j = self.position
@@ -944,6 +945,16 @@ class King(Piece):
                 self.board.squares[i][0] = None
 
     def possible_moves(self, moves):
+        """
+        construit une liste d'instanciation de Move possibles
+        Actuellement traité : 
+            -Déplacement
+            -Prise
+            -Mise en échec
+            -Roque (gère aussi le mouvement de la tour concernée)
+        COMPLET
+            
+        """
         move_list = []
         i, j = self.position
         # 8 déplacements possibles
@@ -1033,18 +1044,20 @@ class King(Piece):
                 if self.board.squares[i][j+3].first_move :
                     if self.board.squares[i][j+1] is None and self.board.squares[i][j+2] is None :
                         if (not self.board.is_attacked_by((i,j+1), "white") and self.color=="black") or (not self.board.is_attacked_by((i,j+1), "black") and self.color=="white"):
-                            m=Move(self, self.position, (i, j+2), 'castle')
-                            if self.board.simulate(m, moves):
-                                move_list.append(m)
+                            if (not self.board.is_attacked_by((i,j), "white") and self.color=="black") or (not self.board.is_attacked_by((i,j), "black") and self.color=="white"):
+                                m=Move(self, self.position, (i, j+2), 'castle')
+                                if self.board.simulate(m, moves):
+                                    move_list.append(m)
         # grand roque : Regarder si le roi a bougé/si y'a une tour/si elle a bougé/si c'est vide entre les deux/Si les cases traversée par le roi sont attaquées/
         if self.first_move:
             if isinstance(self.board.squares[i][j - 4], Rook):
                 if self.board.squares[i][j - 4].first_move:
                     if self.board.squares[i][j - 1] is None and self.board.squares[i][j - 2] is None and self.board.squares[i][j - 3] is None:
                         if (not self.board.is_attacked_by((i, j - 1), "white") and self.color == "black") or (not self.board.is_attacked_by((i, j - 1), "black") and self.color == "white"):
-                            m = Move(self, self.position, (i, j - 2), 'castle')
-                            if self.board.simulate(m, moves):
-                                move_list.append(m)
+                            if (not self.board.is_attacked_by((i, j), "white") and self.color == "black") or (not self.board.is_attacked_by((i, j), "black") and self.color == "white"):
+                                m = Move(self, self.position, (i, j - 2), 'castle')
+                                if self.board.simulate(m, moves):
+                                    move_list.append(m)
         return move_list
 
     def attacked_cases(self):

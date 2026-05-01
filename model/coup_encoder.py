@@ -28,7 +28,7 @@ class Move():
         p = piece.marque + col + str(i+1)
         s = ""
         if self.type == 'castle':
-            if j == 6:
+            if k == 6:
                 s+= "O-O"
             else:
                 s+= "O-O-O"

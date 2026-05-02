@@ -15,6 +15,17 @@ class Move():
         self.type = type
         self.promotion_piece = promotion_piece
         self.captured_piece = captured_piece
+        self.is_a_mat = False
+        self.is_a_check = False
+    
+    def clone(self, new_board):
+        piece_copy = new_board.squares[self.depart[0]][self.depart[1]]
+        if self.captured_piece is None :
+            m = Move(piece_copy, self.depart, self.arrivee, self.type, None, self.promotion_piece)
+        else :
+            captured_piece_copy = new_board.squares[self.captured_piece.position[0]][self.captured_piece.position[1]]
+            m = Move(piece_copy, self.depart, self.arrivee, self.type, captured_piece_copy, self.promotion_piece)
+        return m
 
     def __str__(self):
         """
@@ -46,4 +57,8 @@ class Move():
                 s+= p + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
         else:
             s+= p + "->" + chr(ord('a') + k) + str(l+1)
+        if self.is_a_mat : 
+            s+= "#"
+        elif self.is_a_check : 
+            s+= '+'
         return s

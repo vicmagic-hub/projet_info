@@ -106,20 +106,13 @@ class Board:
         Methode pour simuler un coup, et renvoyer True si il est valide (ne met pas le roi en échec), False sinon
         annulation du coup ensuite
         """
-        actual_state = deepcopy(moves)
-        self.apply_move(move)
+        board_copy = deepcopy(self)
+        move_copy = move.clone(board_copy)
+        board_copy.apply_move(move_copy)
         if move.piece.color == 'white' :
-            valid = not self.is_attacked_by(self.white_king, 'black')
-            actual_state.append([move])
-            self.last_move = move
-            actual_state = self.undo_last_move(actual_state)
-            return valid
+            return not board_copy.is_attacked_by(board_copy.white_king, 'black')
         else :
-            valid = not self.is_attacked_by(self.black_king, 'white')
-            actual_state[-1].append(move)
-            self.last_move = move
-            actual_state = self.undo_last_move(actual_state)
-            return valid 
+            return not board_copy.is_attacked_by(board_copy.black_king, 'white') 
 
                 
     def test_case(self, position):

@@ -19,6 +19,7 @@ class Game():
         self.type = type
         self.opponent = opponent
         self.side = side
+        self.white_score = None
         to_play = 'white'
         counter = 1
         #initialisation des pions
@@ -72,35 +73,19 @@ class Game():
             if self.name == "test":
                 print(self.board)
             #enregistrement des coups possibles et contôle de l'existence d'un coup
-            d={}
-            self.board.end = True
-            if to_play == 'white' : 
-                for piece in self.board.white_pieces() :
-                    l = piece.possible_moves(self.moves)
-                    d[str(piece)] = l
-                    if self.board.end and len (l) > 0 :
-                        self.board.end = False
-            else : 
-                for piece in self.board.black_pieces() :
-                    l = piece.possible_moves(self.moves)
-                    d[str(piece)] = l
-                    if self.board.end and len (l) > 0 :
-                        self.board.end = False
+            self.board.end = self.check_end(to_play)
             #si aucun coup, vérification de mat ou pat : 
             if self.board.end :
                 if to_play =='white' and self.board.is_attacked_by(self.board.white_king, 'black') :
-                    #enregister le mat dans moves
-                    #passer white_score à 0
-                    print("white loses by checkmate")
+                    self.moves[-1][1].is_a_mat = True
+                    self.white_score = 0
                     return to_play, counter
                 elif to_play =='black' and self.board.is_attacked_by(self.board.black_king, 'white') :
-                    #enregister le mat dans moves
-                    #passer white_score à 1
-                    print("black loses by checkmate")
+                    self.moves[-1][0].is_a_mat = True
+                    self.white_score = 1
                     return to_play, counter
                 else : 
-                    #passer white_score à 0.5
-                    print("pat, it's a draw")
+                    self.white_score = 0.5
                     return to_play, counter
             #tour classique autrement
             print(f"{to_play}'s turn to play")
@@ -110,7 +95,8 @@ class Game():
                 if s == "resign":
                     print (to_play + " resigns")
                     self.board.end = True
-                    #passer white_score à 0 ou 1 suivant la couleur
+                    if to_play == 'white' : self.white_score = 0
+                    else : self.white_score = 1
                     return to_play, counter
                 if s == "z" :
                     if len(self.moves) == 0 : 
@@ -141,7 +127,7 @@ class Game():
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
                     continue
-                possible_moves = d[str(self.board.squares[i][j])]
+                possible_moves = self.board.squares[i][j].possible_moves(self.moves)
                 if len (possible_moves) >0 :
                     s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
                 else : 
@@ -160,24 +146,43 @@ class Game():
                     print("Invalid move, try again")
             self.board.apply_move(m)
             if to_play == 'black':
+                if self.board.is_attacked_by(self.board.white_king, 'black') :
+                    m.is_a_check = True
                 self.moves[-1].append(m)
                 to_play = 'white'
                 return to_play, counter +1
             else :
+                if self.board.is_attacked_by(self.board.black_king, 'white') :
+                    m.is_a_check = True
                 self.moves.append([m])
                 to_play = 'black'
                 return to_play, counter
+    
+    def check_end(self, trait) :
+        if trait == 'white' : 
+            for piece in self.board.white_pieces() :
+                l = piece.possible_moves(self.moves)
+                if len (l) > 0 :
+                    return False
+        else : 
+            for piece in self.board.black_pieces() :
+                l = piece.possible_moves(self.moves)
+                if len (l) > 0 :
+                    return False
+        return True
             
     def __str__(self):
         """
         Affichage de la partie dans la console
         """
-        s = "String d'intro de la partie encore non complète\n"
+        s = "String d'intro de la partie (encore non complète)\n"
         for i in range(len(self.moves)):
             s += str(i+1) + " : "
             for m in self.moves[i]:
                 s += str(m) + " "
             s+= "\n"
+        if self.board.end :
+            s+= "(" + str(self.white_score) + " - " + str(1- self.white_score) + ")"
         return s
 
 #tests temporaires

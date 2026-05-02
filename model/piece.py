@@ -121,9 +121,7 @@ class Pawn(Piece):
                 if self.board.simulate(m, moves):
                     move_list.append(m)
             #coté droit pour les blancs, coté gauche pour les noirs
-            print("on y est")
             if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+direction], Pawn) and self.board.squares[i][j+direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
-                print("in")
                 m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
                 if self.board.simulate(m, moves):
                     move_list.append(m) 

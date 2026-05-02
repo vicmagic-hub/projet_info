@@ -12,7 +12,6 @@ class Game():
         création d'un historique des coups, d'un plateau, nom de la partie, 
         type de partie (local, online), adversaire (none si local), côté joué (white ou black)
         initialisation des pièces sur le plateau
-        TEMPORAIREMENT, quelques tours implémentés
         """
         self.moves = []
         self.board = Board()
@@ -70,15 +69,48 @@ class Game():
             Gestion des échecs ? des mats, des nuls ? 
         """
         if type == "local":
-            valid = False
-            print(f"{to_play}'s turn to play")
             if self.name == "test":
                 print(self.board)
+            #enregistrement des coups possibles et contôle de l'existence d'un coup
+            d={}
+            self.board.end = True
+            if to_play == 'white' : 
+                for piece in self.board.white_pieces() :
+                    l = piece.possible_moves(self.moves)
+                    d[str(piece)] = l
+                    if self.board.end and len (l) > 0 :
+                        self.board.end = False
+            else : 
+                for piece in self.board.black_pieces() :
+                    l = piece.possible_moves(self.moves)
+                    d[str(piece)] = l
+                    if self.board.end and len (l) > 0 :
+                        self.board.end = False
+            #si aucun coup, vérification de mat ou pat : 
+            if self.board.end :
+                if to_play =='white' and self.board.is_attacked_by(self.board.white_king, 'black') :
+                    #enregister le mat dans moves
+                    #passer white_score à 0
+                    print("white loses by checkmate")
+                    return to_play, counter
+                elif to_play =='black' and self.board.is_attacked_by(self.board.black_king, 'white') :
+                    #enregister le mat dans moves
+                    #passer white_score à 1
+                    print("black loses by checkmate")
+                    return to_play, counter
+                else : 
+                    #passer white_score à 0.5
+                    print("pat, it's a draw")
+                    return to_play, counter
+            #tour classique autrement
+            print(f"{to_play}'s turn to play")
+            valid = False
             while valid == False:
                 s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
                 if s == "resign":
                     print (to_play + " resigns")
                     self.board.end = True
+                    #passer white_score à 0 ou 1 suivant la couleur
                     return to_play, counter
                 if s == "z" :
                     if len(self.moves) == 0 : 
@@ -109,7 +141,7 @@ class Game():
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
                     continue
-                possible_moves = self.board.squares[i][j].possible_moves(self.moves)
+                possible_moves = d[str(self.board.squares[i][j])]
                 if len (possible_moves) >0 :
                     s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
                 else : 

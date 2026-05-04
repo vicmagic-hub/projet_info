@@ -127,7 +127,7 @@ class Game():
                 if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
                     print("Invalid piece, try again")
                     continue
-                possible_moves = self.board.squares[i][j].possible_moves(self.moves)
+                possible_moves = self.board.squares[i][j].possible_moves()
                 if len (possible_moves) >0 :
                     s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
                 else : 
@@ -161,12 +161,12 @@ class Game():
     def check_end(self, trait) :
         if trait == 'white' : 
             for piece in self.board.white_pieces() :
-                l = piece.possible_moves(self.moves)
+                l = piece.possible_moves()
                 if len (l) > 0 :
                     return False
         else : 
             for piece in self.board.black_pieces() :
-                l = piece.possible_moves(self.moves)
+                l = piece.possible_moves()
                 if len (l) > 0 :
                     return False
         return True

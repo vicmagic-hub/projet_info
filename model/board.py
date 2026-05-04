@@ -101,7 +101,7 @@ class Board:
                     return True
         return False
     
-    def simulate(self,move, moves):
+    def simulate(self,move):
         """
         Methode pour simuler un coup, et renvoyer True si il est valide (ne met pas le roi en échec), False sinon
         annulation du coup ensuite

@@ -6,7 +6,7 @@ class Game():
     """
     Classe pour les parties
     """
-    def __init__(self, name, type,opponent, side):
+    def __init__(self, date, type, side,  player_1, opponent):
         """
         initialisation d'une partie :
         création d'un historique des coups, d'un plateau, nom de la partie, 
@@ -15,10 +15,14 @@ class Game():
         """
         self.moves = []
         self.board = Board()
-        self.name = name
+        self.date = date
         self.type = type
-        self.opponent = opponent
         self.side = side
+        self.player_1 = player_1
+        if opponent is None :
+            self.opponent = "IA'pasmoyen"
+        else :
+            self.opponent = opponent
         self.white_score = None
         to_play = 'white'
         counter = 1
@@ -70,7 +74,7 @@ class Game():
             Gestion des échecs ? des mats, des nuls ? 
         """
         if type == "local":
-            if self.name == "test":
+            if self.type == "local":
                 print(self.board)
             #enregistrement des coups possibles et contôle de l'existence d'un coup
             self.board.end = self.check_end(to_play)
@@ -175,7 +179,11 @@ class Game():
         """
         Affichage de la partie dans la console
         """
-        s = "String d'intro de la partie (encore non complète)\n"
+        if self.side == 'white' :
+            s = "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
+        else :
+            s = "Partie du " + self.date + " de " + self.opponent + " contre " + self.player_1 + '\n'
+        s+= "Score : (" + str(self.white_score) + " - " + str(1- self.white_score) + ")\n"
         for i in range(len(self.moves)):
             s += str(i+1) + " : "
             for m in self.moves[i]:
@@ -187,4 +195,4 @@ class Game():
 
 #tests temporaires
 if __name__ == "__main__":
-    g = Game("test", "local", "none", "white")
+    g = Game("aujourd'hui", "local", "white", "Victor FUZCO", None)

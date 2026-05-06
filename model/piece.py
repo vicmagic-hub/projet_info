@@ -3,7 +3,7 @@ from abc import abstractmethod
 from board import Board
 from coup_encoder import Move
 
-class Piece:
+class Piece():
     """
     Classe abstraite pour les pièces d'échecs
     """
@@ -97,9 +97,10 @@ class Pawn(Piece):
         move_list = []
         i, j = self.position
         #avancée classique d'une case
-        if self.board.squares[i + direction][j] is None:
+        if not self.board.test_case((i+direction, j)) :
             #promotion
-            if (i + direction == 7*(self.color=='white')):
+            prom_row = 7 if self.color == 'white' else 0
+            if i + direction == prom_row:
                 m = Move(self, self.position, (i + direction, j), 'promotion')
             #normal
             else:
@@ -107,26 +108,29 @@ class Pawn(Piece):
             if self.board.simulate(m):
                 move_list.append(m)
             start_row = 1 if self.color == 'white' else 6
-            if (i== start_row) and self.board.squares[i + 2 * direction][j] is None:
+            if (i == start_row) and not self.board.test_case((i + 2*direction, j)):
                 #ajouter l'avancée de deux cases
-                m = Move(self, self.position, (i + 2 * direction, j), 'doublepion')
+                m = Move(self, self.position, (i + 2*direction, j), 'doublepion')
                 if self.board.simulate(m):
                     move_list.append(m)
         #gestion du EN-PASSANT
-        row = 4 if self.color == 'white' else 3
-        if i == row:
+        en_passant_row = 4 if self.color == 'white' else 3
+        if i == en_passant_row:
             #coté gauche pour les blancs, coté droit pour les noirs
-            if j > 0 and self.board.squares[i][j-direction] is not None and isinstance(self.board.squares[i][j-direction], Pawn) and self.board.squares[i][j-direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-direction):
+            targeted_color = self.board.test_color((i,j-direction))
+            if j > 0 and targeted_color is not None and isinstance(self.board.squares[i][j-direction], Pawn) and targeted_color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-direction):
                 m = Move(self, self.position, (i+direction, j-direction), 'enpassant', captured_piece = self.board.squares[i][j-direction])
                 if self.board.simulate(m):
                     move_list.append(m)
             #coté droit pour les blancs, coté gauche pour les noirs
-            if j < 7 and self.board.squares[i][j+direction] is not None and isinstance(self.board.squares[i][j+direction], Pawn) and self.board.squares[i][j+direction].color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
+            targeted_color = self.board.test_color((i,j+direction))
+            if j < 7 and targeted_color is not None and isinstance(self.board.squares[i][j+direction], Pawn) and targeted_color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
                 m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
                 if self.board.simulate(m):
                     move_list.append(m) 
         #gestion de la prise du coté gauche pour les blancs, du coté droit pour les noirs
-        if j > 0 and self.board.squares[i + direction][j-1] is not None and self.board.test_color((i + direction, j-1)) != self.color:
+        targeted_color = self.board.test_color((i+direction,j-1))
+        if j > 0 and targeted_color is not None and targeted_color != self.color:
             if (i + direction == 7*(self.color=='white')):
                 m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
             else:
@@ -134,7 +138,8 @@ class Pawn(Piece):
             if self.board.simulate(m):
                 move_list.append(m)
         #gestion de la prise du coté droit pour les blancs, du coté gauche pour les noirs
-        if j < 7 and self.board.squares[i + direction][j+1] is not None and self.board.test_color((i + direction, j+1)) != self.color:
+        targeted_color = self.board.test_color((i+direction,j+1))
+        if j < 7 and targeted_color is not None and targeted_color != self.color:
             if (i + direction == 7*(self.color=='white')):
                 m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
             else:
@@ -235,13 +240,14 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7:
-            if self.board.squares[i+k+1][j] is None:
+            targeted_color = self.board.test_color((i+k+1,j))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j), 'prise', captured_piece = self.board.squares[i+k+1][j])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -250,13 +256,14 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0:
-            if self.board.squares[i-k-1][j] is None:
+            targeted_color = self.board.test_color((i-k-1,j))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j), 'prise', captured_piece = self.board.squares[i-k-1][j])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -265,13 +272,14 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and j+k < 7:
-            if self.board.squares[i][j+k+1] is None:
+            targeted_color = self.board.test_color((i,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i, j+k+1), 'prise', captured_piece = self.board.squares[i][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -280,13 +288,14 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and j-k > 0:
-            if self.board.squares[i][j-k-1] is None:
+            targeted_color = self.board.test_color((i,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i, j-k-1), 'prise', captured_piece = self.board.squares[i][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -303,7 +312,8 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7:
-            if self.board.squares[i+k+1][j] is None or (isinstance(self.board.squares[i+k+1][j], King) and self.board.test_color((i+k+1, j)) != self.color):
+            targeted_color = self.board.test_color((i+k+1, j))
+            if targeted_color is None or (isinstance(self.board.squares[i+k+1][j], King) and targeted_color != self.color):
                 attacked.append((i+k+1, j))
             else :
                 occupied = True
@@ -313,7 +323,8 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and i-k >0 :
-            if self.board.squares[i-k-1][j] is None or (isinstance(self.board.squares[i-k-1][j], King) and self.board.test_color((i-k-1, j)) != self.color):
+            targeted_color = self.board.test_color((i-k-1, j))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j))
             else :
                 occupied = True
@@ -323,7 +334,8 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and j+k < 7:
-            if self.board.squares[i][j+k+1] is None or (isinstance(self.board.squares[i][j+k+1], King) and self.board.test_color((i, j+k+1)) != self.color):
+            targeted_color = self.board.test_color((i,j+k+1))
+            if targeted_color is None or (isinstance(self.board.squares[i][j+k+1], King) and targeted_color != self.color):
                 attacked.append((i, j+k+1))
             else :
                 occupied = True
@@ -333,7 +345,8 @@ class Rook(Piece):
         occupied = False
         k = 0
         while not occupied and j-k >0:
-            if self.board.squares[i][j-k-1] is None or (isinstance(self.board.squares[i][j-k-1], King) and self.board.test_color((i, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i, j-k-1))
             else :
                 occupied = True

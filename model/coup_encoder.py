@@ -51,17 +51,11 @@ class Move():
             else:
                 s+= "O-O-O"
         elif self.type == 'promotion':
-            if self.promotion_piece in ['Q', 'R', 'B', 'N']:
-                s+= + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
-            else:
-                s+= p + "->" + chr(ord('a') + k) + str(l+1) + '= ?'
+                s+= p + "->" + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
         elif self.type == 'prise' or self.type == 'enpassant':
             s+= p + 'x' + chr(ord('a') + k) + str(l+1)
         elif self.type == 'promoprise':
-            if self.promotion_piece in ['Q', 'R', 'B', 'N']:
                 s+= p + 'x' + chr(ord('a') + k) + str(l+1) + '=' + self.promotion_piece
-            else:
-                s+= p + 'x' + chr(ord('a') + k) + str(l+1) + '= ?' 
         else:
             s+= p + "->" + chr(ord('a') + k) + str(l+1)
         if self.is_a_mat : 

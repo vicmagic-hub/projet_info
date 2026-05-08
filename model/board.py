@@ -1,4 +1,5 @@
 from copy import deepcopy
+from piece import Queen, Rook, Bishop, Knight, King
 
 class Board:
     """
@@ -22,9 +23,55 @@ class Board:
         """
         méthode qui reçoit une instanciation de Move et traite le coup
         entrée : instance de la classe Move
-        délègue la gestion du coup à la pièce concernée
+        !! ATENTION !! : self.move(m)  se contente de réaliser un coup, sans vérifier qu'il soit légal.
         """
-        m.piece.move(m)
+        #traitement général
+        piece = m.piece
+        i,j = m.arrivee
+        k,l = m.piece.position
+        self.squares[k][l] = None
+        self.squares[i][j] = piece
+        piece.position = (i,j)
+        if piece.first_move != None :
+            piece.first_move = False
+        #traitements particuliers :
+            #gestion de la promotion
+        if m.type == 'promotion' or m.type == 'promoprise':
+            if m.promotion_piece == 'Q':
+                self.squares[i][j] = Queen(piece.color, (i,j), self)
+            elif m.promotion_piece == 'R':
+                self.squares[i][j] = Rook(piece.color, (i,j), self)  
+            elif m.promotion_piece == 'B':
+                self.squares[i][j] = Bishop(piece.color, (i,j), self)
+            elif m.promotion_piece == 'N':
+                self.squares[i][j] = Knight(piece.color, (i,j), self)
+        else : 
+            #gestion de la prise en passant
+            if m.type == 'enpassant' :
+                if piece.color == 'white':
+                    self.squares[i-1][j] = None
+                else:
+                    self.squares[i+1][j] = None
+            #enregistrement de la position du roi
+        if isinstance(piece, King) :
+            if piece.color == 'white':
+                self.white_king = (i,j)
+            else :
+                self.black_king = (i,j)
+            #gestion du roque
+        if m.type == 'castle':
+            if j == 6:
+                #petit roque
+                #mouvement de la tour
+                self.squares[i][5] = self.squares[i][7]
+                self.squares[i][5].position = (i,5)
+                self.squares[i][7] = None   
+            else:
+                #grand roque
+                #mouvement de la tour
+                self.squares[i][3] = self.squares[i][0]
+                self.squares[i][3].position = (i,3)
+                self.squares[i][0] = None
         self.last_move = m
     
     def undo_last_move(self,moves):
@@ -147,7 +194,7 @@ class Board:
         renvoie True si une pièce se trouve sur la case, False sinon
         """
         i, j = position
-        return self.squares[i][j] != None
+        return self.squares[i][j] is not None
     
     def test_color(self, position):
         """

@@ -1,6 +1,4 @@
 from abc import abstractmethod
-
-from board import Board
 from coup_encoder import Move
 
 class Piece():
@@ -31,21 +29,6 @@ class Piece():
         i,j = self.position
         col = chr(ord('a') + j)
         return self.marque + col + str(i+1)
-    
-    def move(self, m):
-        """
-        méthode générale : reçoit une instanciation de Move et traite le coup
-        entrée : instance de la classe Move
-        gère les cas simples mais évolue par polymorphisme pour certaines pièces (Roi et pion)
-        !! ATENTION !! : self.move(m)  se contente de réaliser un coup, sans vérifier qu'il soit légal.
-        """
-        i,j = m.arrivee
-        k,l = m.piece.position
-        self.board.squares[k][l] = None
-        self.board.squares[i][j] = self
-        self.position = (i,j)
-        if self.first_move != None :
-            self.first_move = False
     
     @abstractmethod
     def possible_moves(self):
@@ -173,15 +156,30 @@ class Pawn(Piece):
         i, j = self.position
         #gestion de l'avancée
         if not self.board.test_case((i+direction, j)) :
-            #gestion de la promotion
+            #gestion de l'avancée en promotion
             prom_row = 7 if self.color == 'white' else 0
             if i + direction == prom_row:
                 m = Move(self, self.position, (i + direction, j), 'promotion')
+                m.promotion_piece = 'Q'
+                if self.board.simulate(m):
+                    move_list.append(m)
+                m = Move(self, self.position, (i + direction, j), 'promotion')
+                m.promotion_piece = 'R'
+                if self.board.simulate(m):
+                    move_list.append(m)
+                m = Move(self, self.position, (i + direction, j), 'promotion')
+                m.promotion_piece = 'B'
+                if self.board.simulate(m):
+                    move_list.append(m)
+                m = Move(self, self.position, (i + direction, j), 'promotion')
+                m.promotion_piece = 'N'
+                if self.board.simulate(m):
+                    move_list.append(m)
             #avancée classique
             else:
                 m = Move(self, self.position, (i + direction, j), 'classic')
-            if self.board.simulate(m):
-                move_list.append(m)
+                if self.board.simulate(m):
+                    move_list.append(m)
             #avancée de deux cases
             start_row = 1 if self.color == 'white' else 6
             if (i == start_row) and not self.board.test_case((i + 2*direction, j)):
@@ -192,14 +190,14 @@ class Pawn(Piece):
         en_passant_row = 4 if self.color == 'white' else 3
         if i == en_passant_row:
             #coté gauche pour les blancs, coté droit pour les noirs
-            if j > 0 :
+            if 0 <= j-direction <= 7 :
                 targeted_color = self.board.test_color((i,j-direction))
                 if targeted_color is not None and isinstance(self.board.squares[i][j-direction], Pawn) and targeted_color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j-direction):
                     m = Move(self, self.position, (i+direction, j-direction), 'enpassant', captured_piece = self.board.squares[i][j-direction])
                     if self.board.simulate(m):
                         move_list.append(m)
             #coté droit pour les blancs, coté gauche pour les noirs
-            if j < 7 :
+            if 0 <= j+ direction <= 7 :
                 targeted_color = self.board.test_color((i,j+direction))
                 if targeted_color is not None and isinstance(self.board.squares[i][j+direction], Pawn) and targeted_color != self.color and self.board.last_move.type == 'doublepion' and self.board.last_move.arrivee == (i, j+direction):
                     m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
@@ -209,52 +207,55 @@ class Pawn(Piece):
         if j > 0 :
             targeted_color = self.board.test_color((i+direction,j-1))
             if targeted_color is not None and targeted_color != self.color:
+                #promoprise
                 if (i + direction == 7*(self.color=='white')):
                     m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
+                    m.promotion_piece = 'Q'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
+                    m.promotion_piece = 'R'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
+                    m.promotion_piece = 'B'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j-1), 'promoprise', captured_piece = self.board.squares[i + direction][j-1])
+                    m.promotion_piece = 'N'
+                    if self.board.simulate(m):
+                        move_list.append(m)
                 else:
                     m = Move(self, self.position, (i + direction, j-1), 'prise', captured_piece = self.board.squares[i + direction][j-1])
-                if self.board.simulate(m):
-                    move_list.append(m)
+                    if self.board.simulate(m):
+                        move_list.append(m)
         #gestion de la prise classique du coté droit pour les blancs, du coté gauche pour les noirs
         if j < 7 : 
             targeted_color = self.board.test_color((i+direction,j+1))
             if targeted_color is not None and targeted_color != self.color:
+                #promoprise
                 if (i + direction == 7*(self.color=='white')):
                     m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
+                    m.promotion_piece = 'Q'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
+                    m.promotion_piece = 'R'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
+                    m.promotion_piece = 'B'
+                    if self.board.simulate(m):
+                        move_list.append(m)
+                    m = Move(self, self.position, (i + direction, j+1), 'promoprise', captured_piece = self.board.squares[i + direction][j+1])
+                    m.promotion_piece = 'N'
+                    if self.board.simulate(m):
+                        move_list.append(m)
                 else:
                     m = Move(self, self.position, (i + direction, j+1), 'prise', captured_piece = self.board.squares[i + direction][j+1])
-                if self.board.simulate(m):
-                    move_list.append(m)
+                    if self.board.simulate(m):
+                        move_list.append(m)
         return move_list
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move et traite le coup
-        entrée : instance de la classe Move
-        gère le déplacemnt simple avec super().move(m)
-        gère les cas particulier spécifiques au pion ensuite
-        """
-        super().move(m)
-        i,j = m.arrivee
-        if m.type == 'promotion' or m.type == 'promoprise':
-            #gestion de la promotion
-            new_piece = input("Enter the piece you want to promote to (Q, R, B, N) : ")
-            m.promotion_piece = new_piece
-            if new_piece == 'Q':
-                self.board.squares[i][j] = Queen(self.color, (i,j), self.board)
-            elif new_piece == 'R':
-                self.board.squares[i][j] = Rook(self.color, (i,j), self.board)  
-            elif new_piece == 'B':
-                self.board.squares[i][j] = Bishop(self.color, (i,j), self.board)
-            elif new_piece == 'N':
-                self.board.squares[i][j] = Knight(self.color, (i,j), self.board)
-        else : 
-            #gestion de la prise en passant
-            if m.type == 'enpassant' :
-                if self.color == 'white':
-                    self.board.squares[i-1][j] = None
-                else:
-                    self.board.squares[i+1][j] = None
     
     def attacked_cases(self):
         """
@@ -435,36 +436,6 @@ class King(Piece):
         else:
             self.symbol = '-K'
         self.first_move = True
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move et traite le coup
-        entrée : instance de la classe Move
-        gère le déplacemnt simple avec super().move(m)
-        actualise la position du roi dans la mémoire de l'échiquier
-        gère le cas particulier du roque ensuite (bouge la tour)
-        """
-        super().move(m)
-        #actualise la position du roi dans la mémoire de l'échiquier
-        i,j = m.arrivee
-        if self.color == 'white':
-            self.board.white_king = (i,j)
-        else :
-            self.board.black_king = (i,j)
-        #gestion du roque
-        if m.type == 'castle':
-            if j == 6:
-                #petit roque
-                #mouvement de la tour
-                self.board.squares[i][5] = self.board.squares[i][7]
-                self.board.squares[i][5].position = (i,5)
-                self.board.squares[i][7] = None   
-            else:
-                #grand roque
-                #mouvement de la tour
-                self.board.squares[i][3] = self.board.squares[i][0]
-                self.board.squares[i][3].position = (i,3)
-                self.board.squares[i][0] = None
 
     def possible_moves(self):
         """

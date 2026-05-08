@@ -388,81 +388,89 @@ class Knight(Piece):
         # 8 déplacements possibles
         #1
         if (i+2)<=7 and (j+1)<=7 :
-            if self.board.squares[i + 2][j + 1] is None:
+            targeted_color = self.board.test_color((i+2, j+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i + 2, j + 1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i + 2, j + 1)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i + 2, j + 1), 'prise', captured_piece=self.board.squares[i + 2][j + 1])
                 if self.board.simulate(m):
                     move_list.append(m)
         #2
         if (i+2)<=7 and 0<=(j-1)<=7 :
-            if self.board.squares[i + 2][j - 1] is None:
+            targeted_color=self.board.test_color((1+2,j-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i + 2, j - 1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i + 2, j - 1)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i + 2, j - 1), 'prise', captured_piece=self.board.squares[i + 2][j - 1])
                 if self.board.simulate(m):
                     move_list.append(m)
         #3
         if (i+1)<=7 and 0<=(j-2)<=7 :
-            if self.board.squares[i + 1][j - 2] is None:
+            targeted_color=self.board.test_color((i+1,j-2))
+            if targeted_color is None:
                 m = Move(self, self.position, (i + 1, j - 2), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i + 1, j - 2)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i + 1, j - 2), 'prise', captured_piece=self.board.squares[i + 1][j - 2])
                 if self.board.simulate(m):
                     move_list.append(m)
         #4
-        if 0<=(i-1)<=7 and 0<=(j-2)<=7 :
-            if self.board.squares[i - 1][j - 2] is None:
+        if 0<=(i-1) and 0<=(j-2)  :
+            targeted_color=self.board.test_color((i-1,j-2))
+            if targeted_color is None:
                 m = Move(self, self.position, (i - 1, j - 2), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i - 1, j - 2)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i - 1, j - 2), 'prise', captured_piece=self.board.squares[i - 1][j - 2])
                 if self.board.simulate(m):
                     move_list.append(m)
         #5
-        if 0<=(i-2)<=7 and 0<=(j-1)<=7 :
-            if self.board.squares[i - 2][j - 1] is None:
+        if 0<=(i-2) and 0<=(j-1) :
+            targeted_color=self.board.test_color((i-2,j-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i - 2, j - 1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i - 2, j - 1)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i - 2, j - 1), 'prise', captured_piece=self.board.squares[i - 2][j - 1])
                 if self.board.simulate(m):
                     move_list.append(m)
         #6
-        if 0<=(i-2)<=7 and (j+1)<=7 :
-            if self.board.squares[i - 2][j + 1] is None:
+        if 0<=(i-2) and (j+1)<=7 :
+            targeted_color=self.board.test_color((i-2,j+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i - 2, j + 1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i - 2, j + 1)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i - 2, j + 1), 'prise', captured_piece=self.board.squares[i - 2][j + 1])
                 if self.board.simulate(m):
                     move_list.append(m)
         #7
         if 0<=(i-1)<=7 and (j+2)<=7 :
-            if self.board.squares[i - 1][j + 2] is None:
+            targeted_color=self.board.test_color((i-1,j+2))
+            if targeted_color is None:
                 m = Move(self, self.position, (i - 1, j + 2), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i - 1, j + 2)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i - 1, j + 2), 'prise', captured_piece=self.board.squares[i - 1][j + 2])
                 if self.board.simulate(m):
                     move_list.append(m)
         #8
         if (i+1)<=7 and (j+2)<=7 :
-            if self.board.squares[i + 1][j + 2] is None:
+            targeted_color=self.board.test_color((i+1,j+2))
+            if targeted_color is None:
                 m = Move(self, self.position, (i + 1, j + 2), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
-            elif self.board.test_color((i + 1, j + 2)) != self.color:
+            elif targeted_color != self.color:
                 m = Move(self, self.position, (i + 1, j + 2), 'prise', captured_piece=self.board.squares[i + 1][j + 2])
                 if self.board.simulate(m):
                     move_list.append(m)
@@ -544,13 +552,14 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j+k < 7:
-            if self.board.squares[i+k+1][j+k+1] is None:
+            targeted_color = self.board.test_color((i+k+1,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j+k+1), 'prise', captured_piece = self.board.squares[i+k+1][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -559,13 +568,14 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j-k > 0:
-            if self.board.squares[i+k+1][j-k-1] is None:
+            targeted_color = self.board.test_color((i+k+1,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j-k-1), 'prise', captured_piece = self.board.squares[i+k+1][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -574,13 +584,14 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j+k < 7:
-            if self.board.squares[i-k-1][j+k+1] is None:
+            targeted_color = self.board.test_color((i-k-1,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j+k+1), 'prise', captured_piece = self.board.squares[i-k-1][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -589,13 +600,14 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j-k > 0:
-            if self.board.squares[i-k-1][j-k-1] is None:
+            targeted_color = self.board.test_color((i-k-1,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j-k-1), 'prise', captured_piece = self.board.squares[i-k-1][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -612,6 +624,7 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j+k <7:
+            targeted_color = self.board.test_color((i+k+1,j+k+1))
             if self.board.squares[i+k+1][j+k+1] is None or (isinstance(self.board.squares[i+k+1][j+k+1], King) and self.board.test_color((i+k+1, j+k+1)) != self.color):
                 attacked.append((i+k+1, j+k+1))
             else :
@@ -622,7 +635,8 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and j-k >0 and i+k <7 :
-            if self.board.squares[i+k+1][j-k-1] is None or (isinstance(self.board.squares[i+k+1][j-k-1], King) and self.board.test_color((i+k+1, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i+k+1,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i+k+1][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i+k+1, j-k-1))
             else :
                 occupied = True
@@ -632,7 +646,8 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j+k < 7:
-            if self.board.squares[i-k-1][j+k+1] is None or (isinstance(self.board.squares[i-k-1][j+k+1], King) and self.board.test_color((i-k-1, j+k+1)) != self.color):
+            targeted_color = self.board.test_color((i-k-1,j+k+1))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j+k+1], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j+k+1))
             else :
                 occupied = True
@@ -642,7 +657,8 @@ class Bishop(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j-k > 0:
-            if self.board.squares[i-k-1][j-k-1] is None or (isinstance(self.board.squares[i-k-1][j-k-1], King) and self.board.test_color((i-k-1, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i-k-1,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j-k-1))
             else :
                 occupied = True
@@ -695,13 +711,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7:
-            if self.board.squares[i+k+1][j] is None:
+            targeted_color = self.board.test_color((i+k+1,j))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j), 'prise', captured_piece = self.board.squares[i+k+1][j])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -710,13 +727,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0:
-            if self.board.squares[i-k-1][j] is None:
+            targeted_color = self.board.test_color((i-k-1,j))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j), 'prise', captured_piece = self.board.squares[i-k-1][j])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -725,13 +743,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and j+k < 7:
-            if self.board.squares[i][j+k+1] is None:
+            targeted_color = self.board.test_color((i,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i, j+k+1), 'prise', captured_piece = self.board.squares[i][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -740,27 +759,30 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and j-k > 0:
-            if self.board.squares[i][j-k-1] is None:
+            targeted_color = self.board.test_color((i,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i, j-k-1), 'prise', captured_piece = self.board.squares[i][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
             k += 1
+        #déplacement diagonal vers dans l'ordre des ligne croissantes, colonnes croissantes
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j+k < 7:
-            if self.board.squares[i+k+1][j+k+1] is None:
+            targeted_color = self.board.test_color((i+k+1,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j+k+1), 'prise', captured_piece = self.board.squares[i+k+1][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -769,13 +791,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j-k > 0:
-            if self.board.squares[i+k+1][j-k-1] is None:
+            targeted_color = self.board.test_color((i+k+1,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i+k+1, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i+k+1, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i+k+1, j-k-1), 'prise', captured_piece = self.board.squares[i+k+1][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -784,13 +807,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j+k < 7:
-            if self.board.squares[i-k-1][j+k+1] is None:
+            targeted_color = self.board.test_color((i-k-1,j+k+1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j+k+1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j+k+1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j+k+1), 'prise', captured_piece = self.board.squares[i-k-1][j+k+1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -799,13 +823,14 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j-k > 0:
-            if self.board.squares[i-k-1][j-k-1] is None:
+            targeted_color = self.board.test_color((i-k-1,j-k-1))
+            if targeted_color is None:
                 m = Move(self, self.position, (i-k-1, j-k-1), 'classic')
                 if self.board.simulate(m):
                     move_list.append(m)
             else:
                 occupied = True
-                if self.board.test_color((i-k-1, j-k-1)) != self.color:
+                if targeted_color != self.color:
                     m = Move(self, self.position, (i-k-1, j-k-1), 'prise', captured_piece = self.board.squares[i-k-1][j-k-1])
                     if self.board.simulate(m):
                         move_list.append(m)
@@ -822,7 +847,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7:
-            if self.board.squares[i+k+1][j] is None or (isinstance(self.board.squares[i+k+1][j], King) and self.board.test_color((i+k+1, j)) != self.color):
+            targeted_color = self.board.test_color((i+k+1, j))
+            if targeted_color is None or (isinstance(self.board.squares[i+k+1][j], King) and targeted_color != self.color):
                 attacked.append((i+k+1, j))
             else :
                 occupied = True
@@ -832,7 +858,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k >0 :
-            if self.board.squares[i-k-1][j] is None or (isinstance(self.board.squares[i-k-1][j], King) and self.board.test_color((i-k-1, j)) != self.color):
+            targeted_color = self.board.test_color((i-k-1, j))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j))
             else :
                 occupied = True
@@ -842,7 +869,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and j+k < 7:
-            if self.board.squares[i][j+k+1] is None or (isinstance(self.board.squares[i][j+k+1], King) and self.board.test_color((i, j+k+1)) != self.color):
+            targeted_color = self.board.test_color((i,j+k+1))
+            if targeted_color is None or (isinstance(self.board.squares[i][j+k+1], King) and targeted_color != self.color):
                 attacked.append((i, j+k+1))
             else :
                 occupied = True
@@ -852,7 +880,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and j-k >0:
-            if self.board.squares[i][j-k-1] is None or (isinstance(self.board.squares[i][j-k-1], King) and self.board.test_color((i, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i, j-k-1))
             else :
                 occupied = True
@@ -862,6 +891,7 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i+k < 7 and j+k <7:
+            targeted_color = self.board.test_color((i+k+1,j+k+1))
             if self.board.squares[i+k+1][j+k+1] is None or (isinstance(self.board.squares[i+k+1][j+k+1], King) and self.board.test_color((i+k+1, j+k+1)) != self.color):
                 attacked.append((i+k+1, j+k+1))
             else :
@@ -872,7 +902,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and j-k >0 and i+k <7 :
-            if self.board.squares[i+k+1][j-k-1] is None or (isinstance(self.board.squares[i+k+1][j-k-1], King) and self.board.test_color((i+k+1, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i+k+1,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i+k+1][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i+k+1, j-k-1))
             else :
                 occupied = True
@@ -882,7 +913,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j+k < 7:
-            if self.board.squares[i-k-1][j+k+1] is None or (isinstance(self.board.squares[i-k-1][j+k+1], King) and self.board.test_color((i-k-1, j+k+1)) != self.color):
+            targeted_color = self.board.test_color((i-k-1,j+k+1))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j+k+1], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j+k+1))
             else :
                 occupied = True
@@ -892,7 +924,8 @@ class Queen(Piece):
         occupied = False
         k = 0
         while not occupied and i-k > 0 and j-k > 0:
-            if self.board.squares[i-k-1][j-k-1] is None or (isinstance(self.board.squares[i-k-1][j-k-1], King) and self.board.test_color((i-k-1, j-k-1)) != self.color):
+            targeted_color = self.board.test_color((i-k-1,j-k-1))
+            if targeted_color is None or (isinstance(self.board.squares[i-k-1][j-k-1], King) and targeted_color != self.color):
                 attacked.append((i-k-1, j-k-1))
             else :
                 occupied = True

@@ -1,7 +1,7 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from coup_encoder import Move
 
-class Piece():
+class Piece(ABC):
     """
     Classe abstraite pour les pièces d'échecs
     """

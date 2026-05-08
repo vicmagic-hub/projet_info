@@ -74,7 +74,7 @@ class Board:
                 self.squares[i][0] = None
         self.last_move = m
     
-    def undo_last_move(self,moves):
+    def undo_last_move(self,moves):#actuellement inutilisable
         """
         méthode d'annulation du dernier coup (demi Ctrl-Z)
         entrée : historique des coups joués dans la partie
@@ -133,12 +133,9 @@ class Board:
             self.black_king = m.depart
         #adaptation de l'historique de coups
         if m.piece.color == 'black':
-            moves[-1].pop()
-            self.last_move = moves[-1][0] 
-        else :
             moves.pop()
             if len(moves) == 0 : self.last_move = None  
-            else : self.last_move = moves[-1][1]
+            else :self.last_move = moves[-1]
         #gestion des contraintes sur le premier coup
         if m.piece.first_move is not None : 
             m.piece.first_move = not self.already_moved(m.piece, moves)
@@ -150,10 +147,9 @@ class Board:
         entrées : piece concernée, historique de la partie
         renvoie True si la pièce a déjà bougé, False sinon
         """
-        for two_moves in moves:
-            for move in two_moves:
-                if move.piece == piece:
-                    return True
+        for move in moves:
+            if move.piece == piece:
+                return True
         return False
 
     def is_attacked_by(self, case, color) :    

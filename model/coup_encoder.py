@@ -62,4 +62,8 @@ class Move():
             s+= "#"
         elif self.is_a_check : 
             s+= '+'
+        n = len(s)
+        if n < 9 :
+             for _ in range(9-n):
+                  s+=" "
         return s

@@ -161,32 +161,32 @@ class Game():
                 if to_play =='black' and self.board.is_attacked_by(self.board.white_king, 'black') :
                     m.is_a_mat = True
                     self.white_score = 0
-                    self.moves[-1].append(m)
+                    self.moves.append(m)
                     return to_play, counter
                 elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
                     m.is_a_mat = True
                     self.white_score = 1
-                    self.moves.append([m])
+                    self.moves.append(m)
                     return to_play, counter
                 elif to_play == 'white' : 
                     self.white_score = 0.5
-                    self.moves.append([m])
+                    self.moves.append(m)
                     return to_play, counter
                 else :
                     self.white_score = 0.5
-                    self.moves[-1].append(m)
+                    self.moves.append(m)
                     return to_play, counter
             #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
             if to_play == 'black':
                 if self.board.is_attacked_by(self.board.white_king, 'black') :
                     m.is_a_check = True
-                self.moves[-1].append(m)
+                self.moves.append(m)
                 to_play = 'white'
                 return to_play, counter +1
             else :
                 if self.board.is_attacked_by(self.board.black_king, 'white') :
                     m.is_a_check = True
-                self.moves.append([m])
+                self.moves.append(m)
                 to_play = 'black'
                 return to_play, counter
     
@@ -214,13 +214,14 @@ class Game():
         renvoie la lsite des coups effectués, une description de la partie et le score
         """
         s="/////////////////////////////////////////////////////////////////////////////////// \n"
+        s+="/////////////////////////////////////////////////////////////////////////////////// \n"
         s+= "\n"
         s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
         s+= "Score : (" + str(self.white_score) + " - " + str(1- self.white_score) + ")\n"
-        for i in range(len(self.moves)):
-            s += str(i+1) + " : "
-            for m in self.moves[i]:
-                s += str(m) + " "
+        for i in range(0,len(self.moves),2):
+            s += str((i+1)//2) + " : " + str(self.moves[i]) + " "
+            if i+1 < len (self.moves) :
+                s+= str(self.moves[i+1])
             s+= "\n"
         if self.board.end :
             s+= "(" + str(self.white_score) + " - " + str(1- self.white_score) + ")"

@@ -10,7 +10,7 @@ class Piece():
     def __init__(self,color, position, board):
         """
         initialisation d'un pièce : 
-        Couleur, position, et échiquier
+        entrées : Couleur, position, et échiquier
         Contrôle de la présence dans les limites de l'échiquier
         """
         self.color = color
@@ -20,11 +20,12 @@ class Piece():
         assert 0 <= i < 8 and 0 <= j < 8, "Invalid position, out of bounds "
         self.board.squares[i][j] = self
         self.marque = 'PIECE'
+        self.symbole = 'PIECE'
         self.first_move=None
 
     def __str__(self):
         """
-        Fonction d'affichage de la pièce
+        Affichage de la pièce
         renvoie "Nb5" ou "a3" par exemple
         """
         i,j = self.position
@@ -33,36 +34,41 @@ class Piece():
     
     def move(self, m):
         """
-        méthode générale, évolue pour certaines pièces (ex : promotion du pion, roque du roi)
-        reçoit une instanciation de Move
-        traite le coup
-        ATENTION : move ne connaît pas les règles du jeu, il se contente de réaliser un coup.
-        C'est possible_moves qui fera le tri des coups possibles ou non
+        méthode générale : reçoit une instanciation de Move et traite le coup
+        entrée : instance de la classe Move
+        gère les cas simples mais évolue par polymorphisme pour certaines pièces (Roi et pion)
+        !! ATENTION !! : self.move(m)  se contente de réaliser un coup, sans vérifier qu'il soit légal.
         """
         i,j = m.arrivee
         k,l = m.piece.position
         self.board.squares[k][l] = None
         self.board.squares[i][j] = self
         self.position = (i,j)
+        if self.first_move != None :
+            self.first_move = False
     
     @abstractmethod
     def possible_moves(self):
         """
-        méthode abstraite
-        dépend du type de pièce
-        construit une liste d'instanciation de Move possibles
+        méthode abstraite qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux de self
         """
         pass
 
     @abstractmethod
     def attacked_cases(self):
         """
-        méthode pour afficher les cases attaquées par la pièce
-        renvoie une liste de position attaquées
+        méthode abstraite qui liste les cases attaquées par une pièce
+        renvoie une liste de coordonées de cases attaquées
         """
         pass
 
     def sliding_moves(self, vect_list) : 
+        """
+        Factorisation de possible_moves pour les pièces coulissantes (Dame, Fou, Tour)
+        entrée : liste de vecteurs déplacements élémentaires à regarder, e.g (1,1) pour une diagonale
+        renvoie une liste d'instanciation de Move contenenant les coups légaux de self
+        """
         move_list = []
         i, j = self.position
         for di,dj in vect_list :
@@ -84,6 +90,11 @@ class Piece():
         return move_list
     
     def sliding_attack(self, vect_list) :
+        """
+        Factorisation de attacked_cases pour les pièces coulissantes (Dame, Fou, Tour)
+        entrée : liste de vecteurs déplacements élémentaires à regarder, e.g (1,1) pour une diagonale
+        renvoie une liste de coordonées de cases attaquées
+        """
         attacked = []
         i, j = self.position
         for di,dj in vect_list : 
@@ -100,6 +111,11 @@ class Piece():
         return attacked
     
     def listed_moves(self, vect_list) :
+        """
+        Factorisation de possible_moves pour les pièces à coups listés (Roi et Cavalier)
+        entrée : liste de vecteurs déplacements à regarder, e.g (1,1)
+        renvoie une liste d'instanciation de Move contenenant les coups légaux de self
+        """
         move_list = []
         i, j = self.position
         for di,dj in vect_list :
@@ -116,14 +132,17 @@ class Piece():
         return move_list
     
     def listed_attack(self, vect_list):
+        """
+        Factorisation de attacked_cases pour les pièces à coups listés (Roi et Cavalier)
+        entrée : liste de vecteurs déplacements à regarder, e.g (1,1)
+        renvoie une liste de coordonées de cases attaquées
+        """
         attacked = []
         i, j = self.position
         for di,dj in vect_list :
             if 0<= i+di <= 7 and  0 <= j+dj <= 7 :
                 attacked.append((i+di,j+dj))
         return attacked
-
-
 
     
 class Pawn(Piece):
@@ -145,39 +164,31 @@ class Pawn(Piece):
     
     def possible_moves(self):
         """
-        construit une liste d'instanciation de Move possibles
-        Actuellement traité : 
-            -Déplacement initial de deux cases
-            -Déplacement d'une case
-            -Collision avec une autre pièce
-            -Prise
-            -Promotion
-            -Prise en passant
-            -Mise en échec 
-        COMPLET            
+        méthode qui liste les coups légaux du pion
+        renvoie une liste d'instanciation de Move contenenant les coups légaux du pion           
         """
         direction = 1
         if self.color == 'black': direction = -1
         move_list = []
         i, j = self.position
-        #avancée classique d'une case
+        #gestion de l'avancée
         if not self.board.test_case((i+direction, j)) :
-            #promotion
+            #gestion de la promotion
             prom_row = 7 if self.color == 'white' else 0
             if i + direction == prom_row:
                 m = Move(self, self.position, (i + direction, j), 'promotion')
-            #normal
+            #avancée classique
             else:
                 m = Move(self, self.position, (i + direction, j), 'classic')
             if self.board.simulate(m):
                 move_list.append(m)
+            #avancée de deux cases
             start_row = 1 if self.color == 'white' else 6
             if (i == start_row) and not self.board.test_case((i + 2*direction, j)):
-                #ajouter l'avancée de deux cases
                 m = Move(self, self.position, (i + 2*direction, j), 'doublepion')
                 if self.board.simulate(m):
                     move_list.append(m)
-        #gestion du EN-PASSANT
+        #gestion de la prise en passant
         en_passant_row = 4 if self.color == 'white' else 3
         if i == en_passant_row:
             #coté gauche pour les blancs, coté droit pour les noirs
@@ -194,7 +205,7 @@ class Pawn(Piece):
                     m = Move(self, self.position, (i+direction, j+direction), 'enpassant', captured_piece = self.board.squares[i][j+direction])
                     if self.board.simulate(m):
                         move_list.append(m) 
-        #gestion de la prise du coté gauche pour les blancs, du coté droit pour les noirs
+        #gestion de la prise classique du coté gauche pour les blancs, du coté droit pour les noirs
         if j > 0 :
             targeted_color = self.board.test_color((i+direction,j-1))
             if targeted_color is not None and targeted_color != self.color:
@@ -204,7 +215,7 @@ class Pawn(Piece):
                     m = Move(self, self.position, (i + direction, j-1), 'prise', captured_piece = self.board.squares[i + direction][j-1])
                 if self.board.simulate(m):
                     move_list.append(m)
-        #gestion de la prise du coté droit pour les blancs, du coté gauche pour les noirs
+        #gestion de la prise classique du coté droit pour les blancs, du coté gauche pour les noirs
         if j < 7 : 
             targeted_color = self.board.test_color((i+direction,j+1))
             if targeted_color is not None and targeted_color != self.color:
@@ -218,14 +229,10 @@ class Pawn(Piece):
     
     def move(self, m):
         """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement simple d'une ou deux cases
-            -Prise
-            -Prise en passant
-            -Promotion
-        Complet (en théorie)
+        reçoit une instanciation de Move et traite le coup
+        entrée : instance de la classe Move
+        gère le déplacemnt simple avec super().move(m)
+        gère les cas particulier spécifiques au pion ensuite
         """
         super().move(m)
         i,j = m.arrivee
@@ -242,6 +249,7 @@ class Pawn(Piece):
             elif new_piece == 'N':
                 self.board.squares[i][j] = Knight(self.color, (i,j), self.board)
         else : 
+            #gestion de la prise en passant
             if m.type == 'enpassant' :
                 if self.color == 'white':
                     self.board.squares[i-1][j] = None
@@ -250,7 +258,8 @@ class Pawn(Piece):
     
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par le pion
+        renvoie une liste de coordonées de cases attaquées
         """
         direction = 1
         if self.color == 'black' : direction = -1
@@ -270,7 +279,7 @@ class Rook(Piece):
         Une tour est une pièce, avec : 
         -marque 'R' pour Rook : son affichage renvoie "Ra4" par exemple
         -le symbole R (+ ou - suivant la couleur)
-        -une variable first_move pour la possibilité de roquer
+        -une variable first_move différente de None pour marquer la possibilité de roquer
         """
         super().__init__(color, position, board)
         self.marque = 'R'
@@ -279,37 +288,26 @@ class Rook(Piece):
         else:
             self.symbol = '-R'
         self.first_move = True
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-            -Roque(traité par le Roi)
-        Complet (en théorie)
-        """
-        super().move(m)
-        self.first_move = False
+
 
     def possible_moves(self):
         """
-        construit une liste d'instanciation de Move possibles
-        Actuellement traité : 
-            -Déplacement classique
-            -Prise
-            -Mise en échec 
-        COMPLET
+        méthode qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux de la tour
+        la tour est une pièce coulissante donc s'appuie sur sliding_moves
+        fournit à sliding_moves les vecteurs des déplacements horizontaux et verticaux
         """
-        return self.sliding_moves([(1,0),(-1,0),(0,1),(0,-1)])
-        
+        return self.sliding_moves([(1,0),(-1,0),(0,1),(0,-1)])   
     
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par la tour
+        renvoie une liste de coordonées de cases attaquées
+        la tour est une pièce coulissante donc s'appuie sur sliding_attack
+        fournit à sliding_attack les vecteurs des déplacements horizontaux et verticaux
         """
         return self.sliding_attack([(1,0),(-1,0),(0,1),(0,-1)])
+
 
 class Knight(Piece):
     """
@@ -327,24 +325,22 @@ class Knight(Piece):
             self.symbol = '+N'
         else:
             self.symbol = '-N'
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-        Complet (en théorie)
-        """
-        super().move(m)
 
     def possible_moves(self):
+        """
+        méthode qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux du cavalier
+        le cavalier est une pièce à coups listés donc s'appuie sur listed_moves
+        fournit à listed_moves les 8 déplacements possibles du cavalier
+        """
         return self.listed_moves([(2, 1), (2, -1), (1,-2), (-1,-2), (-2,-1), (-2,1), (-1, 2), (1,2)])
     
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par le cavalier
+        renvoie une liste de coordonées de cases attaquées
+        le cavalier est une pièce à coups listés donc s'appuie sur listed_attack
+        fournit à listed_attack les 8 déplacements possibles du cavalier
         """
         return self.listed_attack([(2, 1), (2, -1), (1,-2), (-1,-2), (-2,-1), (-2,1), (-1, 2), (1,2)])
 
@@ -365,34 +361,25 @@ class Bishop(Piece):
             self.symbol = '+B'
         else:
             self.symbol = '-B'
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-        Complet (en théorie)
-        """
-        super().move(m)
 
     def possible_moves(self):
         """
-        construit une liste d'instanciation de Move possibles
-        Actuellement traité : 
-            -Déplacement classique
-            -Prise
-            -Mise en échec 
-            COMPLET            
+        méthode qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux du fou
+        le fou est une pièce coulissante donc s'appuie sur sliding_moves
+        fournit à sliding_moves les vecteurs des déplacements diagonaux
         """
         return self.sliding_moves([(1,1),(1,-1),(-1,-1),(-1,1)])
     
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par le fou
+        renvoie une liste de coordonées de cases attaquées
+        le fou est une pièce coulissante donc s'appuie sur sliding_attack
+        fournit à sliding_attack les vecteurs des déplacements diagonaux
         """
         return self.sliding_attack([(1,1),(1,-1),(-1,-1),(-1,1)])
+
 
 class Queen(Piece):
     """
@@ -410,34 +397,22 @@ class Queen(Piece):
             self.symbol = '+Q'
         else:
             self.symbol = '-Q'
-    
-    def move(self, m):
-        """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-        Complet (en théorie)
-        """
-        super().move(m)
-
 
     def possible_moves(self):
         """
-        construit une liste d'instanciation de Move possibles
-        Actuellement traité : 
-            -Déplacement classique
-            -Prise
-            -Mise en échec 
-        COMPLET
-            
+        méthode qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux de la dame
+        la dame est une pièce coulissante donc s'appuie sur sliding_moves
+        fournit à sliding_moves les vecteurs des déplacements diagonaux, horizontaux et verticaux
         """
         return self.sliding_moves([(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,-1),(-1,1)])
 
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par la dame
+        renvoie une liste de coordonées de cases attaquées
+        la dame est une pièce coulissante donc s'appuie sur sliding_attack
+        fournit à sliding_attack les vecteurs des déplacements diagonaux, horizontaux et verticaux
         """
         return self.sliding_attack([(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,-1),(-1,1)])
 
@@ -451,7 +426,7 @@ class King(Piece):
         Un roi est une pièce, avec : 
         -marque 'K' pour King : son affichage renvoie "Ka4" par exemple
         -le symbole K (+ ou - suivant la couleur)
-        -une variable first_move pour la possibilité de roquer
+        -une variable first_move différente de None pour marquer la possibilité de roquer
         """
         super().__init__(color, position, board)
         self.marque = 'K'
@@ -463,32 +438,27 @@ class King(Piece):
     
     def move(self, m):
         """
-        reçoit une instanciation de Move
-        traite le mouvement
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-            -Roque (gère aussi le mouvement de la tour concernée)
-        Complet (en théorie)
-
-        Regarder si le roi a bougé/si y'a une tour/si elle a bougé/si c'est vide entre les deux/Si les cases traversée par le roi sont attaquées/
+        reçoit une instanciation de Move et traite le coup
+        entrée : instance de la classe Move
+        gère le déplacemnt simple avec super().move(m)
+        actualise la position du roi dans la mémoire de l'échiquier
+        gère le cas particulier du roque ensuite (bouge la tour)
         """
         super().move(m)
-        self.first_move = False
+        #actualise la position du roi dans la mémoire de l'échiquier
         i,j = m.arrivee
         if self.color == 'white':
             self.board.white_king = (i,j)
         else :
             self.board.black_king = (i,j)
+        #gestion du roque
         if m.type == 'castle':
-            #gestion du roque
             if j == 6:
                 #petit roque
                 #mouvement de la tour
                 self.board.squares[i][5] = self.board.squares[i][7]
                 self.board.squares[i][5].position = (i,5)
-                self.board.squares[i][7] = None
-                
+                self.board.squares[i][7] = None   
             else:
                 #grand roque
                 #mouvement de la tour
@@ -498,14 +468,11 @@ class King(Piece):
 
     def possible_moves(self):
         """
-        construit une liste d'instanciation de Move possibles
-        Actuellement traité : 
-            -Déplacement
-            -Prise
-            -Mise en échec
-            -Roque (gère aussi le mouvement de la tour concernée)
-        COMPLET
-            
+        méthode qui liste les coups légaux 
+        renvoie une liste d'instanciation de Move contenenant les coups légaux du Roi
+        le Roi est une pièce à coups listés donc s'appuie sur listed_moves
+        fournit à listed_moves les 8 déplacements possibles du Roi
+        ajoute ensuite les deux roques, si disponibles
         """
         i, j = self.position
         #ajout des mouvements classique
@@ -528,6 +495,9 @@ class King(Piece):
 
     def attacked_cases(self):
         """
-        renvoie la liste des cases attaquées
+        méthode qui liste les cases attaquées par le Roi
+        renvoie une liste de coordonées de cases attaquées
+        le Roi est une pièce à coups listés donc s'appuie sur listed_attack
+        fournit à listed_attack les 8 déplacements possibles du Roi
         """
         return self.listed_attack([(1,1), (0,1), (-1,1),(-1,0), (-1,-1), (0,-1), (1,-1), (1,0)])

@@ -2,35 +2,42 @@ class Move():
     """
     Classe pour les coups
     """
-    def __init__(self,piece, depart, arrivee, type,captured_piece = None, promotion_piece = None):
+    def __init__(self,piece, depart, arrivee, type,captured_piece = None):
         """
         initialisation d'un coup : 
-        pièce, position de départ, position d'arrivée, 
-        type de coup (normal, prise, enpassant, promotion, promoprise, castle, doublepion),
-        éventuelle pièce capturée, éventuelle pièce de promotion
+        entrées :   pièce concernée, position de départ, position d'arrivée, 
+                    type de coup :str parmi('normal', 'prise', 'enpassant', 'promotion', 'promoprise', 'castle', 'doublepion'),
+                    éventuelle pièce capturée
         """""
         self.piece = piece
         self.depart = depart
         self.arrivee = arrivee
         self.type = type
-        self.promotion_piece = promotion_piece
         self.captured_piece = captured_piece
+        self.promotion_piece = None
         self.is_a_mat = False
         self.is_a_check = False
     
     def clone(self, new_board):
+        """
+        copie profonde d'un coup sur un nouvel échiquier
+        entrée : nouvelle instance de board
+        renvoie le clone de self sur le nouveau plateau
+        """
         piece_copy = new_board.squares[self.depart[0]][self.depart[1]]
         if self.captured_piece is None :
-            m = Move(piece_copy, self.depart, self.arrivee, self.type, None, self.promotion_piece)
+            m = Move(piece_copy, self.depart, self.arrivee, self.type, None)
         else :
             captured_piece_copy = new_board.squares[self.captured_piece.position[0]][self.captured_piece.position[1]]
-            m = Move(piece_copy, self.depart, self.arrivee, self.type, captured_piece_copy, self.promotion_piece)
+            m = Move(piece_copy, self.depart, self.arrivee, self.type, captured_piece_copy)
+        if self.promotion_piece is not None :
+            m.promotion_piece = self.promotion_piece
         return m
 
     def __str__(self):
         """
         Affichage d'un coup en notation non ambiguë
-        a4 -> a5, e4*d5 pour une prise, e7->e8=Q pour une promotion, e7*d8=Q pour une promoprise, O-O pour un petit roque
+        renvoie "Na4->b6" pour un coup classique, "e4*d5" pour une prise, "e7->e8=Q" pour une promotion, "O-O" pour un petit roque, etc
         """
         piece = self.piece
         i,j = self.depart

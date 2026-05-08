@@ -149,18 +149,18 @@ class Board:
         Proposer une variation pour faire jouer les noirs ? 
         """
         board_str = ""
-        board_str += "    a   b   c   d   e   f   g   h\n"
-        board_str += "  +---+---+---+---+---+---+---+---+\n"
+        board_str += "    a    b    c    d    e    f    g    h\n"
+        board_str += "  +----+----+----+----+----+----+----+----+\n"
         for i in range(8):
-            board_str += f"{8 - i} |"
+            board_str += f"{8 - i} | "
             for j in range(8):
                 if self.squares[7-i][j] is None:
-                    board_str += "   |"
+                    board_str += "   | "
                 else:
-                    board_str += (self.squares[7-i][j].symbol + " |")
+                    board_str += (self.squares[7-i][j].symbol + " | ")
             board_str += f" {8 - i}"
             board_str += "\n"
-            board_str += "  +---+---+---+---+---+---+---+---+\n"
-        board_str += "    a   b   c   d   e   f   g   h\n"
+            board_str += "  +----+----+----+----+----+----+----+----+\n"
+        board_str += "    a    b    c    d    e    f    g    h\n"
         return board_str
             

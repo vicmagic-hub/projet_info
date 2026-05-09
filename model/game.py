@@ -219,7 +219,11 @@ class Game():
         s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
         s+= "Score : (" + str(self.white_score) + " - " + str(1- self.white_score) + ")\n"
         for i in range(0,len(self.moves),2):
-            s += str((i+1)//2) + " : " + str(self.moves[i]) + " "
+            if (i+1)//2 < 10 :
+                s += str((i+1)//2) + " "
+            else :
+                s += str((i+1//2))
+            s += " : " + str(self.moves[i]) + " "
             if i+1 < len (self.moves) :
                 s+= str(self.moves[i+1])
             s+= "\n"

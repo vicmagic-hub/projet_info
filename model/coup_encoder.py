@@ -8,6 +8,8 @@ class Move():
         entrées :   pièce concernée, position de départ, position d'arrivée, 
                     type de coup :str parmi('normal', 'prise', 'enpassant', 'promotion', 'promoprise', 'castle', 'doublepion'),
                     éventuelle pièce capturée
+        garde aussi une marque pour la pièce de promotion, des flags échec/mat
+        intègre les informations en self.prev_... pour revenir à l'état avant le coup
         """""
         self.piece = piece
         self.depart = depart
@@ -17,6 +19,14 @@ class Move():
         self.promotion_piece = None
         self.is_a_mat = False
         self.is_a_check = False
+        #information pour annuler un coup
+        self.prev_last_move = None
+        self.prev_piece_first_move = None
+        self.prev_tour_first_move = None
+        self.prev_white_king = None
+        self.prev_black_king = None
+
+        
     
     def clone(self, new_board):
         """

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from coup_encoder import Move
+from model.coup_encoder import Move
 
 class Piece(ABC):
     """

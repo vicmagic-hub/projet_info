@@ -1,17 +1,17 @@
-from board import Board
-from piece import Pawn, Rook, Knight, Bishop, Queen, King
-from random import randint
+from model.board import Board
+from model.piece import Pawn, Rook, Knight, Bishop, Queen, King
+from ai.ai_lab import DumbAI, MinmaxAI
 
 
 class Game():
     """
     Classe pour les parties
     """
-    def __init__(self, date, type, side,  player_1, opponent):
+    def __init__(self, date, player_1, side, type = "IA", opponent = None, level = 0 ):
         """
         initialisation d'une partie 
         entrees :   date, type de partie (local ou IA), coté du joueur 1 (blanc, noir ou aléatoire)
-                    nom du joueur 1 , de son adversaire si local (None si IA)            
+                    nom du joueur 1 , de son adversaire si local (IANiveau si IA)            
         création d'un historique des coups, d'un plateau, du score des blancs
         initialisation des pièces sur le plateau
         initialisation des positions des rois dans la mémoire du plateau
@@ -21,13 +21,20 @@ class Game():
         self.moves = []
         self.board = Board()
         self.date = date
+        self.level = level
         self.type = type
         self.side = side
+        self.opponent = opponent
         self.player_1 = player_1
-        if opponent is None :
-            self.opponent = "IA'pasmoyen"
-        else :
-            self.opponent = opponent
+        if self.type == "IA"  :
+            if self.level == 0 :
+                self.IA = DumbAI()
+            elif self.level == 1 :
+                self.IA = MinmaxAI(p=2)
+            elif self.level == 2 : 
+                self.IA = MinmaxAI(p=4)
+            else : raise "unspuported IA"
+            self.opponent = self.IA.name                
         self.white_score = None
         to_play = 'white'
         #initialisation des pions
@@ -59,125 +66,201 @@ class Game():
         self.board.black_king = (7,4)
         #lancement des tours, jusqu'à ce que la partie prenne fin
         while not self.board.end :
-            to_play = self.tour(to_play, type)
+            if self.type == 'local' : 
+                to_play = self.tour_human(to_play)
+            else :
+                if to_play == self.side :
+                    to_play = self.tour_human(to_play)
+                else :
+                    to_play = self.tour_IA(to_play, opponent)
         #affichage de la partie
         print(self)
         print(self.board)
     
     
-    def tour (self, to_play, type):
+    def tour_human (self, to_play):
         """
-        Méthode pour faire jouer un tour
-        entrées : couleur du joueur qui doit jouer, type de partie (local ou IA), numér du tour en cours (1 tour = blanc + noirs)
-        renvoie la couleur du nouveau joueur qui doit jouer et le compteur actualisé
+        Méthode pour faire jouer un tour à un joueur humain
+        entrées : couleur du joueur qui doit jouer
+        renvoie la couleur du nouveau joueur
         Déroulé : 
             Sélection d'une pièce 
             Affichage des coups possibles pour cette pièce
             Sélection du coup à jouer
             Traitement du coup et mise à jour du plateau
-            Contrôle de l'existence d'un coup possible
+            Contrôle de l'existence d'un coup possible pour le prochain joueur
+                si pas de coups, vérification de l'état (pat ou mat)
+                enregistrement du coup et fin de partie
+            Si coup possible, enregistrement du coup, marquage des échecs éventuels et passage au suivant
+        """
+        print(self.board)
+        print(f"{to_play}'s turn to play")
+        valid = False
+        while valid == False:
+            s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
+            #abandon
+            if s == "resign":
+                self.board.end = True
+                if to_play == 'white' : self.white_score = 0
+                else : self.white_score = 1
+                return to_play
+            #annulation Ctrl-Z
+            elif s== "z" :
+                if len(self.moves) == 0 : 
+                    continue
+                #suppression du coup de l'adversaire
+                m = self.moves.pop()
+                self.board.unapply_move(m)
+                if len(self.moves) == 0 : 
+                    return m.piece.color
+                #suppression du coup du joueur
+                m = self.moves.pop()
+                self.board.unapply_move(m)
+                return m.piece.color
+            #case non existante sur le plateau
+            elif len(s) != 2 or ord('h')<ord(s[0]) or ord('a')>ord(s[0]) or 0>int(s[1]) or 8<int(s[1]) :
+                print("invalid case : make sure to tap something like: h1")
+                continue
+            i, j = int(s[1])-1, ord(s[0])-ord('a')
+            #pas de pièce jouable sur la case
+            if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
+                print("Invalid piece, try again")
+                continue
+            #cas normal : affichage des coups possibles
+            possible_moves = self.board.squares[i][j].possible_moves()
+            if len (possible_moves) >0 :
+                s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
+            else : 
+                print("no possible move for", self.board.squares[i][j])
+                continue
+            for k in range(len(possible_moves)):
+                s += "\nMove " + str(k) + ": " + str(possible_moves[k])
+            print(s)
+            #sélection du coup joué
+            coup = input("select your move with its position (e.g 0 or 4)  in the list enter exit to cancel : ")
+            #choix d'une autre pièce
+            if coup == "exit":
+                continue 
+            #cas classique : sélection d'un coup valide
+            if coup.isdigit() and int(coup) < len(possible_moves):
+                m = possible_moves[int(coup)]
+                valid = True
+            #coup hors liste
+            else :
+                print("Invalid move, try again")
+        #application du coup
+        self.board.apply_move(m)
+        #contrôle de l'existence d'un coup possible pour le prochain joueur
+        if to_play == 'black' : 
+            self.board.end = self.check_end('white')
+        else :
+            self.board.end = self.check_end('black')
+        #si aucun coup, vérification de mat ou pat et fin de partie: 
+        if self.board.end :
+            if to_play =='black' and self.board.is_attacked_by(self.board.white_king, 'black') :
+                m.is_a_mat = True
+                self.white_score = 0
+                self.moves.append(m)
+                return to_play
+            elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
+                m.is_a_mat = True
+                self.white_score = 1
+                self.moves.append(m)
+                return to_play
+            elif to_play == 'white' : 
+                self.white_score = 0.5
+                self.moves.append(m)
+                return to_play
+            else :
+                self.white_score = 0.5
+                self.moves.append(m)
+                return to_play
+        #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
+        if to_play == 'black':
+            if self.board.is_attacked_by(self.board.white_king, 'black') :
+                m.is_a_check = True
+            self.moves.append(m)
+            to_play = 'white'
+            return to_play
+        else :
+            if self.board.is_attacked_by(self.board.black_king, 'white') :
+                m.is_a_check = True
+            self.moves.append(m)
+            to_play = 'black'
+            return to_play
+    
+    def tour_IA(self, to_play, AI_name) :
+        """
+        Méthode pour faire jouer un tour à une IA
+        entrées : couleur du joueur qui doit jouer, nom de l'IA demandée
+        renvoie la couleur du nouveau joueur
+        Déroulé : 
+            Liste des coups possibles
+            Appel de choix_IA_niveau pour sélectionner le coup joué
+            Traitement du coup et mise à jour du plateau
+            Contrôle de l'existence d'un coup possible pour le joueur suivant
                 si pas de coups, vérification de l'état (pat ou mat)
                 enregistrement du coup et fin de partie
             Si coup possible, enregistrement du coup, marquage des échecs éventuels et 
         """
-        if type == "local":
-            if self.type == "local":
-                print(self.board)
-            print(f"{to_play}'s turn to play")
-            valid = False
-            while valid == False:
-                s = input("Select the case of the piece you would like to move (e.g., e4 or d4) : ")
-                #abandon
-                if s == "resign":
-                    self.board.end = True
-                    if to_play == 'white' : self.white_score = 0
-                    else : self.white_score = 1
-                    return to_play
-                #annulation Ctrl-Z
-                elif s== "z" :
-                    if len(self.moves) == 0 : 
-                        continue
-                    #suppression du coup de l'adversaire
-                    m = self.moves.pop()
-                    self.board.unapply_move(m)
-                    if len(self.moves) == 0 : 
-                        return m.piece.color
-                    #suppression du coup du joueur
-                    m = self.moves.pop()
-                    self.board.unapply_move(m)
-                    return m.piece.color
-                #case non existante sur le plateau
-                elif len(s) != 2 or ord('h')<ord(s[0]) or ord('a')>ord(s[0]) or 0>int(s[1]) or 8<int(s[1]) :
-                    print("invalid case : make sure to tap something like: h1")
-                    continue
-                i, j = int(s[1])-1, ord(s[0])-ord('a')
-                #pas de pièce jouable sur la case
-                if self.board.squares[i][j] is None or self.board.squares[i][j].color != to_play :
-                    print("Invalid piece, try again")
-                    continue
-                #cas normal : affichage des coups possibles
-                possible_moves = self.board.squares[i][j].possible_moves()
-                if len (possible_moves) >0 :
-                    s = "Possible moves for " + str(self.board.squares[i][j])  + " :"
-                else : 
-                    print("no possible move for", self.board.squares[i][j])
-                    continue
-                for k in range(len(possible_moves)):
-                    s += "\nMove " + str(k) + ": " + str(possible_moves[k])
-                print(s)
-                #sélection du coup joué
-                coup = input("select your move with its position (e.g 0 or 4)  in the list enter exit to cancel : ")
-                #choix d'une autre pièce
-                if coup == "exit":
-                    continue 
-                #cas classique : sélection d'un coup valide
-                if coup.isdigit() and int(coup) < len(possible_moves):
-                    m = possible_moves[int(coup)]
-                    valid = True
-                #coup hors liste
-                else :
-                    print("Invalid move, try again")
-            #application du coup
-            self.board.apply_move(m)
-            #contrôle de l'existence d'un coup possible pour le prochain joueur
-            if to_play == 'black' : 
-                self.board.end = self.check_end('white')
-            else :
-                self.board.end = self.check_end('black')
-            #si aucun coup, vérification de mat ou pat et fin de partie: 
-            if self.board.end :
-                if to_play =='black' and self.board.is_attacked_by(self.board.white_king, 'black') :
-                    m.is_a_mat = True
-                    self.white_score = 0
-                    self.moves.append(m)
-                    return to_play
-                elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
-                    m.is_a_mat = True
-                    self.white_score = 1
-                    self.moves.append(m)
-                    return to_play
-                elif to_play == 'white' : 
-                    self.white_score = 0.5
-                    self.moves.append(m)
-                    return to_play
-                else :
-                    self.white_score = 0.5
-                    self.moves.append(m)
-                    return to_play
-            #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
-            if to_play == 'black':
-                if self.board.is_attacked_by(self.board.white_king, 'black') :
-                    m.is_a_check = True
+        #ETABLISSEMENT DES COUPS POSSIBLES
+        move_list = []
+        if to_play == 'white' : 
+            for piece in self.board.white_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        else : 
+            for piece in self.board.black_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        #SELECTION DU COUP
+        m = self.IA.select_move(move_list, self.board)          
+        #application du coup
+        self.board.apply_move(m)
+        print("\n", self.IA.name, " played ", m)
+        #contrôle de l'existence d'un coup possible pour le prochain joueur
+        if to_play == 'black' : 
+            self.board.end = self.check_end('white')
+        else :
+            self.board.end = self.check_end('black')
+        #si aucun coup, vérification de mat ou pat et fin de partie: 
+        if self.board.end :
+            if to_play =='black' and self.board.is_attacked_by(self.board.white_king, 'black') :
+                m.is_a_mat = True
+                self.white_score = 0
                 self.moves.append(m)
-                to_play = 'white'
+                return to_play
+            elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
+                m.is_a_mat = True
+                self.white_score = 1
+                self.moves.append(m)
+                return to_play
+            elif to_play == 'white' : 
+                self.white_score = 0.5
+                self.moves.append(m)
                 return to_play
             else :
-                if self.board.is_attacked_by(self.board.black_king, 'white') :
-                    m.is_a_check = True
+                self.white_score = 0.5
                 self.moves.append(m)
-                to_play = 'black'
                 return to_play
-    
+        #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
+        if to_play == 'black':
+            if self.board.is_attacked_by(self.board.white_king, 'black') :
+                m.is_a_check = True
+            self.moves.append(m)
+            to_play = 'white'
+            return to_play
+        else :
+            if self.board.is_attacked_by(self.board.black_king, 'white') :
+                m.is_a_check = True
+            self.moves.append(m)
+            to_play = 'black'
+            return to_play
+
     def check_end(self, trait) :
         """
         Vérifie la présence de coup possible pour le joueur avec le trait
@@ -204,7 +287,10 @@ class Game():
         s="/////////////////////////////////////////////////////////////////////////////////// \n"
         s+="/////////////////////////////////////////////////////////////////////////////////// \n"
         s+= "\n"
-        s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
+        if self.side == 'white' : 
+            s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
+        else :
+            s+= "Partie du " + self.date + " de " + self.opponent + " contre " + self.player_1 + '\n'
         s+= "Score : (" + str(self.white_score) + " - " + str(1- self.white_score) + ")\n"
         for i in range(0,len(self.moves),2):
             if (i+1)//2 < 10 :
@@ -218,7 +304,3 @@ class Game():
         if self.board.end :
             s+= "(" + str(self.white_score) + " - " + str(1- self.white_score) + ")"
         return s
-
-#test temporaire pour lancer 
-if __name__ == "__main__":
-    g = Game("aujourd'hui", "local", "white", "Victor FUZCO", " Oczuf ROTCIV")

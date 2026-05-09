@@ -1,5 +1,4 @@
-from copy import deepcopy
-from piece import Queen, Rook, Bishop, Knight, King
+from model.piece import Queen, Rook, Bishop, Knight, King
 
 class Board:
     """

@@ -12,7 +12,7 @@ class Game():
         initialisation d'une partie 
         entrees :   date, type de partie (local ou IA), coté du joueur 1 (blanc, noir ou aléatoire)
                     nom du joueur 1 , de son adversaire si local (None si IA)            
-        création d'un historique des coups, d'un plateau, du score des blancs et d'un compteur de tours
+        création d'un historique des coups, d'un plateau, du score des blancs
         initialisation des pièces sur le plateau
         initialisation des positions des rois dans la mémoire du plateau
         lancement de la partie
@@ -30,7 +30,6 @@ class Game():
             self.opponent = opponent
         self.white_score = None
         to_play = 'white'
-        counter = 1
         #initialisation des pions
         for j in range(8):
             pw = Pawn('white', (1, j), self.board)
@@ -60,13 +59,13 @@ class Game():
         self.board.black_king = (7,4)
         #lancement des tours, jusqu'à ce que la partie prenne fin
         while not self.board.end :
-            to_play, counter = self.tour(to_play, type, counter)
+            to_play = self.tour(to_play, type)
         #affichage de la partie
         print(self)
         print(self.board)
     
     
-    def tour (self, to_play, type, counter):
+    def tour (self, to_play, type):
         """
         Méthode pour faire jouer un tour
         entrées : couleur du joueur qui doit jouer, type de partie (local ou IA), numér du tour en cours (1 tour = blanc + noirs)
@@ -93,31 +92,20 @@ class Game():
                     self.board.end = True
                     if to_play == 'white' : self.white_score = 0
                     else : self.white_score = 1
-                    return to_play, counter
-                #demie-annulation
-                elif s == "z" :
-                    if len(self.moves) == 0 : 
-                        continue
-                    erased_color = self.board.last_move.piece.color
-                    self.moves = self.board.undo_last_move(self.moves)
-                    if erased_color == 'black' :
-                        return 'black', counter
-                    else :
-                        return 'white', counter -1
+                    return to_play
                 #annulation Ctrl-Z
-                elif s== "Z" :
+                elif s== "z" :
                     if len(self.moves) == 0 : 
                         continue
-                    erased_color = self.board.last_move.piece.color
-                    self.moves = self.board.undo_last_move(self.moves)
+                    #suppression du coup de l'adversaire
+                    m = self.moves.pop()
+                    self.board.unapply_move(m)
                     if len(self.moves) == 0 : 
-                        continue
-                    erased_color = self.board.last_move.piece.color
-                    self.moves = self.board.undo_last_move(self.moves)
-                    if erased_color == 'black' :
-                        return 'black', counter
-                    else :
-                        return 'white', counter -1
+                        return m.piece.color
+                    #suppression du coup du joueur
+                    m = self.moves.pop()
+                    self.board.unapply_move(m)
+                    return m.piece.color
                 #case non existante sur le plateau
                 elif len(s) != 2 or ord('h')<ord(s[0]) or ord('a')>ord(s[0]) or 0>int(s[1]) or 8<int(s[1]) :
                     print("invalid case : make sure to tap something like: h1")
@@ -162,33 +150,33 @@ class Game():
                     m.is_a_mat = True
                     self.white_score = 0
                     self.moves.append(m)
-                    return to_play, counter
+                    return to_play
                 elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
                     m.is_a_mat = True
                     self.white_score = 1
                     self.moves.append(m)
-                    return to_play, counter
+                    return to_play
                 elif to_play == 'white' : 
                     self.white_score = 0.5
                     self.moves.append(m)
-                    return to_play, counter
+                    return to_play
                 else :
                     self.white_score = 0.5
                     self.moves.append(m)
-                    return to_play, counter
+                    return to_play
             #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
             if to_play == 'black':
                 if self.board.is_attacked_by(self.board.white_king, 'black') :
                     m.is_a_check = True
                 self.moves.append(m)
                 to_play = 'white'
-                return to_play, counter +1
+                return to_play
             else :
                 if self.board.is_attacked_by(self.board.black_king, 'white') :
                     m.is_a_check = True
                 self.moves.append(m)
                 to_play = 'black'
-                return to_play, counter
+                return to_play
     
     def check_end(self, trait) :
         """

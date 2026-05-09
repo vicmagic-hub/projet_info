@@ -26,24 +26,6 @@ class Move():
         self.prev_white_king = None
         self.prev_black_king = None
 
-        
-    
-    def clone(self, new_board):
-        """
-        copie profonde d'un coup sur un nouvel échiquier
-        entrée : nouvelle instance de board
-        renvoie le clone de self sur le nouveau plateau
-        """
-        piece_copy = new_board.squares[self.depart[0]][self.depart[1]]
-        if self.captured_piece is None :
-            m = Move(piece_copy, self.depart, self.arrivee, self.type, None)
-        else :
-            captured_piece_copy = new_board.squares[self.captured_piece.position[0]][self.captured_piece.position[1]]
-            m = Move(piece_copy, self.depart, self.arrivee, self.type, captured_piece_copy)
-        if self.promotion_piece is not None :
-            m.promotion_piece = self.promotion_piece
-        return m
-
     def __str__(self):
         """
         Affichage d'un coup en notation non ambiguë

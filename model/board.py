@@ -192,6 +192,22 @@ class Board:
         renvoie la liste des pièces noires sur le plateau
         """
         return [self.squares[i][j] for i in range(8) for j in range(8) if self.test_color((i,j)) == 'black']
+
+    def move_list(self, to_play) :
+        move_list = []
+        if to_play == 'white' : 
+            for piece in self.white_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        else : 
+            for piece in self.black_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        return move_list
     
     def __str__(self):
         """

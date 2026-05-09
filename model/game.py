@@ -7,7 +7,7 @@ class Game():
     """
     Classe pour les parties
     """
-    def __init__(self, date, player_1, side, type = "IA", opponent = None, level = 0 ):
+    def __init__(self, date, player_1, side, level = 0, type = "IA", opponent = None):
         """
         initialisation d'une partie 
         entrees :   date, type de partie (local ou IA), coté du joueur 1 (blanc, noir ou aléatoire)
@@ -30,9 +30,9 @@ class Game():
             if self.level == 0 :
                 self.IA = DumbAI()
             elif self.level == 1 :
-                self.IA = MinmaxAI(p=2)
+                self.IA = MinmaxAI(2)
             elif self.level == 2 : 
-                self.IA = MinmaxAI(p=4)
+                self.IA = MinmaxAI(3)
             else : raise "unspuported IA"
             self.opponent = self.IA.name                
         self.white_score = None
@@ -72,7 +72,7 @@ class Game():
                 if to_play == self.side :
                     to_play = self.tour_human(to_play)
                 else :
-                    to_play = self.tour_IA(to_play, opponent)
+                    to_play = self.tour_IA(to_play)
         #affichage de la partie
         print(self)
         print(self.board)
@@ -189,36 +189,21 @@ class Game():
             to_play = 'black'
             return to_play
     
-    def tour_IA(self, to_play, AI_name) :
+    def tour_IA(self, to_play) :
         """
         Méthode pour faire jouer un tour à une IA
         entrées : couleur du joueur qui doit jouer, nom de l'IA demandée
         renvoie la couleur du nouveau joueur
-        Déroulé : 
-            Liste des coups possibles
-            Appel de choix_IA_niveau pour sélectionner le coup joué
+        Déroulé :
+            Appel de l'IA pour sélectionner le coup joué
             Traitement du coup et mise à jour du plateau
             Contrôle de l'existence d'un coup possible pour le joueur suivant
                 si pas de coups, vérification de l'état (pat ou mat)
                 enregistrement du coup et fin de partie
             Si coup possible, enregistrement du coup, marquage des échecs éventuels et 
         """
-        #ETABLISSEMENT DES COUPS POSSIBLES
-        move_list = []
-        if to_play == 'white' : 
-            for piece in self.board.white_pieces() :
-                l = piece.possible_moves()
-                if len (l) > 0 :
-                    for move in l :
-                        move_list.append(move)
-        else : 
-            for piece in self.board.black_pieces() :
-                l = piece.possible_moves()
-                if len (l) > 0 :
-                    for move in l :
-                        move_list.append(move)
         #SELECTION DU COUP
-        m = self.IA.select_move(move_list, self.board)          
+        m = self.IA.select_move(self.board, to_play)          
         #application du coup
         self.board.apply_move(m)
         print("\n", self.IA.name, " played ", m)
@@ -237,10 +222,6 @@ class Game():
             elif to_play =='white' and self.board.is_attacked_by(self.board.black_king, 'white') :
                 m.is_a_mat = True
                 self.white_score = 1
-                self.moves.append(m)
-                return to_play
-            elif to_play == 'white' : 
-                self.white_score = 0.5
                 self.moves.append(m)
                 return to_play
             else :

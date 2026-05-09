@@ -19,6 +19,7 @@ class Piece(ABC):
         self.board.squares[i][j] = self
         self.marque = 'PIECE'
         self.symbole = 'PIECE'
+        self.value = 0
         self.first_move=None
 
     def __str__(self):
@@ -137,6 +138,7 @@ class Pawn(Piece):
         Un pion est une pièce, avec : 
         -marque vide : son affichage renvoie simplement "a4" par exemple
         -le symbole p (+ ou - suivant la couleur)
+        -une valeur de 1
         """
         super().__init__(color, position, board)
         self.marque = ''
@@ -144,6 +146,7 @@ class Pawn(Piece):
             self.symbol = '+p'
         else:
             self.symbol = '-p'
+        self.value = 1
     
     def possible_moves(self):
         """
@@ -281,6 +284,7 @@ class Rook(Piece):
         -marque 'R' pour Rook : son affichage renvoie "Ra4" par exemple
         -le symbole R (+ ou - suivant la couleur)
         -une variable first_move différente de None pour marquer la possibilité de roquer
+        -une valeur de 5
         """
         super().__init__(color, position, board)
         self.marque = 'R'
@@ -289,6 +293,7 @@ class Rook(Piece):
         else:
             self.symbol = '-R'
         self.first_move = True
+        self.value = 5
 
 
     def possible_moves(self):
@@ -319,6 +324,7 @@ class Knight(Piece):
         Un cavalier est une pièce, avec : 
         -marque 'N' pour Knight : son affichage renvoie "Na4" par exemple
         -le symbole N (+ ou - suivant la couleur)
+        -une valeur de 3
         """
         super().__init__(color, position, board)
         self.marque = 'N'
@@ -326,6 +332,7 @@ class Knight(Piece):
             self.symbol = '+N'
         else:
             self.symbol = '-N'
+        self.value = 3
 
     def possible_moves(self):
         """
@@ -355,6 +362,7 @@ class Bishop(Piece):
         Un fou est une pièce, avec : 
         -marque 'B' pour Bishop : son affichage renvoie "Ba4" par exemple
         -le symbole B (+ ou - suivant la couleur)
+        -une valeur de 3
         """
         super().__init__(color, position, board)
         self.marque = 'B'
@@ -362,6 +370,7 @@ class Bishop(Piece):
             self.symbol = '+B'
         else:
             self.symbol = '-B'
+        self.value = 3
 
     def possible_moves(self):
         """
@@ -391,6 +400,7 @@ class Queen(Piece):
         Une dame est une pièce, avec : 
         -marque 'Q' pour Queen : son affichage renvoie "Qa4" par exemple
         -le symbole Q (+ ou - suivant la couleur)
+        -une valeur de 9
         """
         super().__init__(color, position, board)
         self.marque = 'Q'
@@ -398,6 +408,7 @@ class Queen(Piece):
             self.symbol = '+Q'
         else:
             self.symbol = '-Q'
+        self.value = 9
 
     def possible_moves(self):
         """

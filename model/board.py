@@ -151,16 +151,12 @@ class Board:
         renvoie False si le roi du joueur est attaqué à la suite de son propre coup, True sinon
         simule le coup, regarde le résultat, et annule le coup
         """
-        avant = self
         self.apply_move(m)
         if m.piece.color == 'white' :
             legal = not self.is_attacked_by(self.white_king, 'black')
         else :
             legal = not self.is_attacked_by(self.black_king, 'white') 
         self.unapply_move(m)
-
-        apres = self
-        assert avant is apres, "ça a merdé : erreur de simulation invasive"
         return legal
                 
     def test_case(self, position):

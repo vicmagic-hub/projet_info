@@ -296,7 +296,7 @@ class Game():
             if (i+1)//2 < 10 :
                 s += str((i+1)//2) + " "
             else :
-                s += str((i+1//2))
+                s += str(((i+1)//2))
             s += " : " + str(self.moves[i]) + " "
             if i+1 < len (self.moves) :
                 s+= str(self.moves[i+1])

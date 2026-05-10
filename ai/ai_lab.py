@@ -107,5 +107,3 @@ class MinmaxAI (AI) :
         for piece in board.black_pieces() :
             bscore += piece.value 
         return wscore - bscore
-
-

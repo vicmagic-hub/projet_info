@@ -1,3 +1,5 @@
+from datetime import date
+
 from model.board import Board
 from model.piece import Pawn, Rook, Knight, Bishop, Queen, King
 from ai.ai_lab import DumbAI, MinmaxAI
@@ -7,7 +9,7 @@ class Game():
     """
     Classe pour les parties
     """
-    def __init__(self, date, player_1, side, level = 0, type = "IA", opponent = None):
+    def __init__(self, player_1, side, level = 0, type = "IA", opponent = None):
         """
         initialisation d'une partie 
         entrees :   date, type de partie (local ou IA), coté du joueur 1 (blanc, noir ou aléatoire)
@@ -19,23 +21,29 @@ class Game():
         """
         self.moves = []
         self.board = Board()
-        self.date = date
+        self.date = str(date.today())
         self.level = level
         self.type = type
         self.side = side
         self.opponent = opponent
         self.player_1 = player_1
         if self.type == "IA"  :
-            if self.level == 0 :
+            if self.level == 1 :
                 self.IA = DumbAI()
-            elif self.level == 1 :
-                self.IA = MinmaxAI(2)
             elif self.level == 2 : 
                 self.IA = MinmaxAI(3)
-            else : raise "unspuported IA"
             self.opponent = self.IA.name                
         self.white_score = None
         to_play = 'white'
+        #affichage de début de partie 
+        s="/////////////////////////////////////////////////////////////////////////////////// \n"
+        s+="/////////////////////////////////////////////////////////////////////////////////// \n"
+        s+= "\n"
+        if self.side == 'white' : 
+            s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
+        else :
+            s+= "Partie du " + self.date + " de " + self.opponent + " contre " + self.player_1 + '\n'
+        print (s)
         #lancement des tours, jusqu'à ce que la partie prenne fin
         while not self.board.end :
             if self.type == 'local' : 

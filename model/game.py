@@ -17,7 +17,6 @@ class Game():
         initialisation des positions des rois dans la mémoire du plateau
         lancement de la partie
         """
-
         self.moves = []
         self.board = Board()
         self.date = date
@@ -37,33 +36,6 @@ class Game():
             self.opponent = self.IA.name                
         self.white_score = None
         to_play = 'white'
-        #initialisation des pions
-        for j in range(8):
-            pw = Pawn('white', (1, j), self.board)
-            pb = Pawn('black', (6, j), self.board)
-        #initialisation des Tours
-        Rw1 = Rook('white', (0, 0), self.board)
-        Rw2 = Rook('white', (0, 7), self.board)
-        Rb1 = Rook('black', (7, 0), self.board)
-        Rb2 = Rook('black', (7, 7), self.board)
-        #initialisation des Cavaliers
-        Nw1 = Knight('white', (0, 1), self.board)
-        Nw2 = Knight('white', (0, 6), self.board)
-        Nb1 = Knight('black', (7, 1), self.board)
-        Nb2 = Knight('black', (7, 6), self.board)
-        #initialisation des Fous
-        Bw1 = Bishop('white', (0, 2), self.board)
-        Bw2 = Bishop('white', (0, 5), self.board)
-        Bb1 = Bishop('black', (7, 2), self.board)
-        Bb2 = Bishop('black', (7, 5), self.board)
-        #initialisation des Reines
-        Qw = Queen('white', (0, 3), self.board)
-        Qb = Queen('black', (7, 3), self.board)
-        #initialisation des Rois
-        Kw = King('white', (0, 4), self.board)
-        self.board.white_king = (0,4)
-        Kb = King('black', (7, 4), self.board)
-        self.board.black_king = (7,4)
         #lancement des tours, jusqu'à ce que la partie prenne fin
         while not self.board.end :
             if self.type == 'local' : 

@@ -1,4 +1,4 @@
-from model.piece import Queen, Rook, Bishop, Knight, King
+from model.piece import Pawn, Queen, Rook, Bishop, Knight, King
 
 class Board:
     """
@@ -10,13 +10,39 @@ class Board:
         création de squares pour stocker les pièces
         création de la variable end (fin de partie)
         création de la variable last_move pour stocker le dernier coup joué, pour la gestion d'en passant
+        initialisation des pièces sur l'échiquier
         creation des variables white_king et black_king, pour accéder plus rapidement aux positions des rois
         """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.end = False
         self.last_move = None
-        self.white_king = None
-        self.black_king = None
+        #initialisation des pions
+        for j in range(8):
+            pw = Pawn('white', (1, j), self)
+            pb = Pawn('black', (6, j), self)
+        #initialisation des Tours
+        Rw1 = Rook('white', (0, 0), self)
+        Rw2 = Rook('white', (0, 7), self)
+        Rb1 = Rook('black', (7, 0), self)
+        Rb2 = Rook('black', (7, 7), self)
+        #initialisation des Cavaliers
+        Nw1 = Knight('white', (0, 1), self)
+        Nw2 = Knight('white', (0, 6), self)
+        Nb1 = Knight('black', (7, 1), self)
+        Nb2 = Knight('black', (7, 6), self)
+        #initialisation des Fous
+        Bw1 = Bishop('white', (0, 2), self)
+        Bw2 = Bishop('white', (0, 5), self)
+        Bb1 = Bishop('black', (7, 2), self)
+        Bb2 = Bishop('black', (7, 5), self)
+        #initialisation des Reines
+        Qw = Queen('white', (0, 3), self)
+        Qb = Queen('black', (7, 3), self)
+        #initialisation des Rois
+        Kw = King('white', (0, 4), self)
+        self.white_king = (0,4)
+        Kb = King('black', (7, 4), self)
+        self.black_king = (7,4)
     
     def apply_move(self, m):
         """

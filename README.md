@@ -1,4 +1,4 @@
-# Projet INfo : Modélisation d'un jeu d'échec
+# Projet Info : Modélisation d'un jeu d'échec
 
 Chess.com n'a qu'à bien se tenir 
 

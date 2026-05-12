@@ -3,15 +3,24 @@ from abc import ABC, abstractmethod
 
 class AI() :
     """
-    Classe des IA
+    Classe abstraite des IA
     """
 
     @abstractmethod
     def __init__(self):
+        """
+        Initialisation de l'IA
+        Dépend du modèle choisi
+        """
         pass
 
     @abstractmethod
-    def select_move(self, l):
+    def select_move(self, board, to_play):
+        """
+        choix du coup de l'IA dans une situation donnée
+        entree : plateau, couleur du joueur qui doit jouer
+        renvoie une instance de Move
+        """
         pass
 
 class DumbAI (AI) : 
@@ -20,27 +29,51 @@ class DumbAI (AI) :
     coups aléatoires
     """
     def __init__(self):
+        """
+        Initialisation de l'IA
+        attribution du nom
+        """
         self.name = "IAdifficilementpire"
     
     def select_move(self, board, to_play) :
-        #établissement des coups possibles
+        """
+        choix du coup de l'IA dans une situation donnée
+        entree : plateau, couleur du joueur qui doit jouer
+        renvoie une instance de Move
+        méthode de réflexion : 
+            - génération d'une liste de coup possibles
+            - sélection d'un indice de coup au hasard
+        """
         move_list = board.move_list(to_play)
-        #choix éclairé du coup
         n = len(move_list)
         k = randint(0, n-1)
         return move_list[k]
     
 class MinmaxAI (AI) :
     """
-    Classe de l'IA réfléchie
-    algo de min max à profondeur variable
-    heuristique qui s'appuie uniquement sur la valeur des pièces (1 à 9 pts par pièce)
+    Classe de l'IA (un peu) réfléchie
+    algo de min max à profondeur variable et heuristique douteuse
+    En l'état, gère en temps raisonnable des profondeurs de 3, voire 4.
     """
     def __init__(self, depth):
+        """
+        Initialisation de l'IA
+        entree : profondeur souhaitée
+        attribution du nom et initialisation de la profondeur 
+        """
         self.name = "IAmoyendsefaireavoir"
         self.depth = depth
     
     def select_move(self, board, to_play) :
+        """
+        choix du coup de l'IA dans une situation donnée
+        entree : plateau, couleur du joueur qui doit jouer
+        renvoie une instance de Move
+        méthode de réflexion : 
+            - génération d'une liste de coup possibles
+            - évaluation des coups par min_max
+            -sélection du coup le plus favorable
+        """
         move_list = board.move_list(to_play)
         shuffle(move_list)
         if to_play == 'white' :
@@ -61,22 +94,25 @@ class MinmaxAI (AI) :
                 board.unapply_move(m)
                 if eval < best :
                     best_move, best = m, eval
-        print (best)
         return best_move
       
     def rec_minmax(self, board, to_play, depth,) :
+        """
+        Algo de minmax récursif !:
+        entree : plateau, joueur profondeur
+        renvoie l'évaluation d'une position 
+        calcul l'évaluation en simulant tous les coups à une profondeur p, puis en utilsant une heuristique pour évaluer la position
+        considère que chaque joueur tentera de jouer le meilleur coup possible (tentative d'alternativelent minimiser/maximiser le score blanc)
+        donne des valeurs très fortes aux mats pour créer une aspiration
+        """
         if depth == 0 : 
             return self.evaluate_board(board)
         else :
             move_list = board.move_list(to_play)
             if move_list == [] :
                 if to_play =='white' and board.is_attacked_by(board.white_king, 'black') :
-                    print("mat contre les blancs repéré")
-                    print(board.white_king)
                     return -1000
                 elif to_play =='black' and board.is_attacked_by(board.black_king, 'white') :
-                    print("mat contre les noirs repéré")
-                    print(board.black_king)
                     return 1000
                 else :
                     return 0
@@ -100,6 +136,12 @@ class MinmaxAI (AI) :
                 return best
         
     def evaluate_board(self, board) : 
+        """
+        évaluation naive d'une position
+        entree : plateau
+        renvoie le score des blancs dans la partie
+        évalue le score via la différence de materiel
+        """
         wscore = 0
         bscore = 0
         for piece in board.white_pieces() :

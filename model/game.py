@@ -21,6 +21,7 @@ class Game():
         """
         self.moves = []
         self.board = Board()
+        self.board.place_piece()
         self.date = str(date.today())
         self.level = level
         self.type = type

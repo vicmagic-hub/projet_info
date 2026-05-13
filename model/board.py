@@ -15,7 +15,9 @@ class Board:
         """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.end = False
-        self.last_move = None
+        self.last_move = None      
+    
+    def place_piece(self) :
         #initialisation des pions
         for j in range(8):
             pw = Pawn('white', (1, j), self)
@@ -43,6 +45,7 @@ class Board:
         self.white_king = (0,4)
         Kb = King('black', (7, 4), self)
         self.black_king = (7,4)
+
     
     def apply_move(self, m):
         """

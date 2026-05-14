@@ -35,16 +35,16 @@ class DumbAI (AI) :
         """
         self.name = "IAdifficilementpire"
     
-    def select_move(self, board, to_play) :
+    def select_move(self, board) :
         """
         choix du coup de l'IA dans une situation donnée
-        entree : plateau, couleur du joueur qui doit jouer
+        entree : plateau
         renvoie une instance de Move
         méthode de réflexion : 
             - génération d'une liste de coup possibles
             - sélection d'un indice de coup au hasard
         """
-        move_list = board.move_list(to_play)
+        move_list = board.move_list()
         n = len(move_list)
         k = randint(0, n-1)
         return move_list[k]
@@ -64,64 +64,63 @@ class MinmaxAI (AI) :
         self.name = "IAmoyendsefaireavoir"
         self.depth = depth
     
-    def select_move(self, board, to_play) :
+    def select_move(self, board) :
         """
         choix du coup de l'IA dans une situation donnée
-        entree : plateau, couleur du joueur qui doit jouer
+        entree : plateau
         renvoie une instance de Move
         méthode de réflexion : 
             - génération d'une liste de coup possibles
             - évaluation des coups par min_max
             -sélection du coup le plus favorable
         """
-        move_list = board.move_list(to_play)
+        move_list = board.move_list()
         shuffle(move_list)
-        if to_play == 'white' :
+        if board.trait == 'white' :
             best = -10000
             best_move = None
             for m in move_list :
                 board.apply_move(m)
-                eval = self.rec_minmax(board, "black", self.depth-1)
+                eval = self.rec_minmax(board, self.depth-1)
                 board.unapply_move(m)
-                if eval > best :
-                    best_move, best = m, eval
+                if eval > best : best_move, best = m, eval
         else :
             best = 10000
             best_move = None
             for m in move_list :
                 board.apply_move(m)
-                eval = self.rec_minmax(board, "white", self.depth-1)
+                eval = self.rec_minmax(board, self.depth-1)
                 board.unapply_move(m)
                 if eval < best :
                     best_move, best = m, eval
         return best_move
       
-    def rec_minmax(self, board, to_play, depth,) :
+    def rec_minmax(self, board, depth,) :
         """
         Algo de minmax récursif !:
-        entree : plateau, joueur profondeur
+        entree : plateau, profondeur
         renvoie l'évaluation d'une position 
         calcul l'évaluation en simulant tous les coups à une profondeur p, puis en utilsant une heuristique pour évaluer la position
-        considère que chaque joueur tentera de jouer le meilleur coup possible (tentative d'alternativelent minimiser/maximiser le score blanc)
+        considère que chaque joueur tentera de jouer le meilleur coup possible (tentative d'alternativement minimiser/maximiser le score blanc)
         donne des valeurs très fortes aux mats pour créer une aspiration
         """
         if depth == 0 : 
             return self.evaluate_board(board)
         else :
-            move_list = board.move_list(to_play)
+            move_list = board.move_list()
             if move_list == [] :
-                if to_play =='white' and board.is_attacked_by(board.white_king, 'black') :
+                if board.trait =='white' and board.is_attacked_by(board.white_king, 'black') :
                     return -1000
-                elif to_play =='black' and board.is_attacked_by(board.black_king, 'white') :
+                elif board.trait =='black' and board.is_attacked_by(board.black_king, 'white') :
                     return 1000
                 else :
                     return 0
             else :
-                if to_play =='white' : 
+                if board.trait == 'white' : 
                     best = -10000
                     for move in move_list : 
                         board.apply_move(move)
-                        eval = self.rec_minmax(board,'black', depth-1)
+                        eval = self.rec_minmax(board, depth-1)
                         board.unapply_move(move)
                         if eval > best : 
                             best = eval
@@ -129,7 +128,7 @@ class MinmaxAI (AI) :
                     best = 10000
                     for move in move_list : 
                         board.apply_move(move)
-                        eval = self.rec_minmax(board, 'white', depth-1)
+                        eval = self.rec_minmax(board, depth-1)
                         board.unapply_move(move)
                         if eval < best :
                             best = eval

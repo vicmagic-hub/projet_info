@@ -1,5 +1,4 @@
-from copy import deepcopy
-from piece import Queen, Rook, Bishop, Knight, King
+from model.piece import Pawn, Queen, Rook, Bishop, Knight, King
 
 class Board:
     """
@@ -11,28 +10,65 @@ class Board:
         création de squares pour stocker les pièces
         création de la variable end (fin de partie)
         création de la variable last_move pour stocker le dernier coup joué, pour la gestion d'en passant
-        creation des variables white_king et black_king, pour accéder plus rapidement aux positions des rois
         """
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.end = False
         self.last_move = None
-        self.white_king = None
-        self.black_king = None
+        self.trait = 'white'      
+    
+    def place_piece(self) :
+        """
+        initialisation des pièces sur l'échiquier : format standard
+        creation des variables white_king et black_king, pour accéder plus rapidement aux positions des rois
+        """
+        #initialisation des pions
+        for j in range(8):
+            pw = Pawn('white', (1, j), self)
+            pb = Pawn('black', (6, j), self)
+        #initialisation des Tours
+        Rw1 = Rook('white', (0, 0), self)
+        Rw2 = Rook('white', (0, 7), self)
+        Rb1 = Rook('black', (7, 0), self)
+        Rb2 = Rook('black', (7, 7), self)
+        #initialisation des Cavaliers
+        Nw1 = Knight('white', (0, 1), self)
+        Nw2 = Knight('white', (0, 6), self)
+        Nb1 = Knight('black', (7, 1), self)
+        Nb2 = Knight('black', (7, 6), self)
+        #initialisation des Fous
+        Bw1 = Bishop('white', (0, 2), self)
+        Bw2 = Bishop('white', (0, 5), self)
+        Bb1 = Bishop('black', (7, 2), self)
+        Bb2 = Bishop('black', (7, 5), self)
+        #initialisation des Reines
+        Qw = Queen('white', (0, 3), self)
+        Qb = Queen('black', (7, 3), self)
+        #initialisation des Rois
+        Kw = King('white', (0, 4), self)
+        self.white_king = (0,4)
+        Kb = King('black', (7, 4), self)
+        self.black_king = (7,4)
     
     def apply_move(self, m):
         """
-        méthode qui reçoit une instanciation de Move et traite le coup
+        méthode qui reçoit une instanciation de Move, lui rentre les données nécessaire à l'annulation, et traite le coup
         entrée : instance de la classe Move
-        !! ATENTION !! : self.move(m)  se contente de réaliser un coup, sans vérifier qu'il soit légal.
+        !! ATENTION !! : self.apply_move(m)  se contente de réaliser un coup, sans vérifier qu'il soit légal.
         """
-        #traitement général
+        #import de variables
         piece = m.piece
         i,j = m.arrivee
         k,l = m.piece.position
+        #sauvegarde des variables actuelles
+        m.prev_last_move = self.last_move
+        m.prev_piece_first_move = piece.first_move
+        m.prev_white_king = self.white_king
+        m.prev_black_king = self.black_king
+        #traitement classique
         self.squares[k][l] = None
         self.squares[i][j] = piece
         piece.position = (i,j)
-        if piece.first_move != None :
+        if piece.first_move is not None :
             piece.first_move = False
         #traitements particuliers :
             #gestion de la promotion
@@ -60,97 +96,103 @@ class Board:
                 self.black_king = (i,j)
             #gestion du roque
         if m.type == 'castle':
+            #si l'on roque, c'était forcément le premier coup de la tour
+            m.prev_tour_first_move = True
             if j == 6:
                 #petit roque
                 #mouvement de la tour
                 self.squares[i][5] = self.squares[i][7]
                 self.squares[i][5].position = (i,5)
+                self.squares[i][5].first_move = False
                 self.squares[i][7] = None   
             else:
                 #grand roque
                 #mouvement de la tour
                 self.squares[i][3] = self.squares[i][0]
                 self.squares[i][3].position = (i,3)
+                self.squares[i][3].first_move = False
                 self.squares[i][0] = None
         self.last_move = m
-    
-    def undo_last_move(self,moves):#actuellement inutilisable
+        if m.piece.color == 'white' : 
+            self.trait = 'black'
+        else : 
+            self.trait = 'white'
+
+    def unapply_move(self, m): 
         """
-        méthode d'annulation du dernier coup (demi Ctrl-Z)
-        entrée : historique des coups joués dans la partie
-        Remet le plateau dans son état précédent
-        Renvoie l'historique des coups, ajusté
+        méthode qui reçoit le dernier coup joué, et restaure l'état du board avant ce dernier
+        entrée : instance de la classe Move
         """
-        m = self.last_move
-        #traitement du déplacement simple ou de la promotion
-        if m.type == 'classic' or m.type == 'doublepion' or m.type == 'promotion':
-            m.piece.position = m.depart
-            self.squares[m.depart[0]][m.depart[1]] = m.piece
-            self.squares[m.arrivee[0]][m.arrivee[1]] = None
-        #traitement des prises et promotion sur prise
+        #import de variables
+        piece = m.piece
+        i,j = m.arrivee
+        k,l = m.depart
+        #retour de la pièce dans les cas classiques
+        self.squares[k][l] = m.piece
+        m.piece.position = m.depart
+        self.squares[i][j] = None
+        if m.piece.first_move is not None :
+            m.piece.first_move = m.prev_piece_first_move
+        #traitement complémentaire des prises et promotion sur prise
         if m.type == 'prise' or m.type == 'promoprise' :
-            m.piece.position = m.depart
-            self.squares[m.depart[0]][m.depart[1]] = m.piece
-            self.squares[m.arrivee[0]][m.arrivee[1]] = m.captured_piece
-        #traitement de la prise en passant
+            self.squares[i][j] = m.captured_piece
+        #traitement complémentaire de la prise en passant
         if m.type == 'enpassant' :
             if m.piece.color == 'white':
-                self.squares[m.arrivee[0]-1][m.arrivee[1]] = m.captured_piece
+                self.squares[i-1][j] = m.captured_piece
             else:
-                self.squares[m.arrivee[0]+1][m.arrivee[1]] = m.captured_piece
-            m.piece.position = m.depart
-            self.squares[m.depart[0]][m.depart[1]] = m.piece
-            self.squares[m.arrivee[0]][m.arrivee[1]] = None
-        #traitement du roque
+                self.squares[i+1][j] = m.captured_piece
+        #gestion complémentaire de la tour dans le roque
         if m.type == 'castle' : 
-            m.piece.position = m.depart
             #petit roque
             if m.arrivee[1] == 6:
-                #gestion du roi
-                m.piece.position = m.depart
-                self.squares[m.depart[0]][m.depart[1]] = m.piece
-                self.squares[m.arrivee[0]][m.arrivee[1]] = None
-                #gestion de la tour
-                tour=self.squares[m.arrivee[0]][5]
-                tour.position = (m.arrivee[0],7)
-                self.squares[m.arrivee[0]][7] = tour
-                self.squares[m.arrivee[0]][5] = None
+                tour=self.squares[i][5]
+                tour.position = (i,7)
+                tour.first_move = m.prev_tour_first_move
+                self.squares[i][7] = tour
+                self.squares[i][5] = None
             #grand roque
             else:
-                #gestion du roi
-                m.piece.position = m.depart
-                self.squares[m.depart[0]][m.depart[1]] = m.piece
-                self.squares[m.arrivee[0]][m.arrivee[1]] = None
-                #gestion de la tour
-                tour=self.squares[m.arrivee[0]][3]
-                tour.position = (m.arrivee[0],0)
-                self.squares[m.arrivee[0]][0] = tour
-                self.squares[m.arrivee[0]][3] = None
-        #actualisation de la position des rois dans la mémoire du plateau
-        if m.arrivee==self.white_king : 
-            self.white_king = m.depart
-        if m.arrivee==self.black_king : 
-            self.black_king = m.depart
-        #adaptation de l'historique de coups
-        if m.piece.color == 'black':
-            moves.pop()
-            if len(moves) == 0 : self.last_move = None  
-            else :self.last_move = moves[-1]
-        #gestion des contraintes sur le premier coup
-        if m.piece.first_move is not None : 
-            m.piece.first_move = not self.already_moved(m.piece, moves)
-        return moves   
-    
-    def already_moved(self, piece, moves):
+                tour=self.squares[i][3]
+                tour.position = (i,0)
+                tour.first_move = m.prev_tour_first_move
+                self.squares[i][0] = tour
+                self.squares[i][3] = None
+        #retour des états du board
+        self.trait = m.piece.color    
+        self.last_move = m.prev_last_move
+        self.white_king = m.prev_white_king
+        self.black_king = m.prev_black_king
+        self.end = False  
+
+    def update_move_flag(self, m) :
         """
-        Méthode pour vérifier si une pièce à déjà bougé dans une historique de partie.
-        entrées : piece concernée, historique de la partie
-        renvoie True si la pièce a déjà bougé, False sinon
+        mise à jour des flags d'un coup après qu'il soit joué
+        entree : move
+        met à jour les flags du move : is_a_mat/ is_a_check
+        met à jour le flag du board : end
         """
-        for move in moves:
-            if move.piece == piece:
-                return True
-        return False
+        #contrôle de l'existence d'un coup possible pour le prochain joueur
+        self.end = self.check_end()
+        #si aucun coup, vérification de mat ou pat et fin de partie: 
+        if self.end :
+            if self.trait =='white' and self.is_attacked_by(self.white_king, 'black') :
+                m.is_a_mat = True
+                m.is_a_check = True
+                return self.trait
+            elif self.trait =='black' and self.is_attacked_by(self.black_king, 'white') :
+                m.is_a_mat = True
+                m.is_a_check = True
+                return self.trait
+            else :
+                return self.trait
+        #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
+        elif self.trait == 'white':
+            if self.is_attacked_by(self.white_king, 'black') :
+                m.is_a_check = True
+        else :
+            if self.is_attacked_by(self.black_king, 'white') :
+                m.is_a_check = True
 
     def is_attacked_by(self, case, color) :    
         """
@@ -168,20 +210,37 @@ class Board:
                     return True
         return False
     
-    def simulate(self,move):
+    def simulate(self, m):
         """
         Methode de vérification d'un coup (pas d'auto_échec)
         entrée : coup à vérifier
         renvoie False si le roi du joueur est attaqué à la suite de son propre coup, True sinon
-        POUR LE MOMENT fonctionne par copie profonde et simulation sur un plateau parallèle
+        simule le coup, regarde le résultat, et annule le coup
         """
-        board_copy = deepcopy(self)
-        move_copy = move.clone(board_copy)
-        board_copy.apply_move(move_copy)
-        if move.piece.color == 'white' :
-            return not board_copy.is_attacked_by(board_copy.white_king, 'black')
+        self.apply_move(m)
+        if self.trait == 'black' :
+            legal = not self.is_attacked_by(self.white_king, 'black')
         else :
-            return not board_copy.is_attacked_by(board_copy.black_king, 'white') 
+            legal = not self.is_attacked_by(self.black_king, 'white') 
+        self.unapply_move(m)
+        return legal
+
+    def check_end(self) :
+        """
+        Vérifie la présence de coup possible pour le joueur qui doit jouer
+        renvoie False si au moins un coup est disponible, False sinon
+        """
+        if self.trait == 'white' : 
+            for piece in self.white_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    return False
+        else : 
+            for piece in self.black_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    return False
+        return True
                 
     def test_case(self, position):
         """
@@ -216,6 +275,26 @@ class Board:
         renvoie la liste des pièces noires sur le plateau
         """
         return [self.squares[i][j] for i in range(8) for j in range(8) if self.test_color((i,j)) == 'black']
+
+    def move_list(self) :
+        """
+        coups disponibles
+        renvoie la liste des coups disponibles pour le joueur avec le trait
+        """
+        move_list = []
+        if self.trait == 'white' : 
+            for piece in self.white_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        else : 
+            for piece in self.black_pieces() :
+                l = piece.possible_moves()
+                if len (l) > 0 :
+                    for move in l :
+                        move_list.append(move)
+        return move_list
     
     def __str__(self):
         """

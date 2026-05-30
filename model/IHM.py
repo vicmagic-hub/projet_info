@@ -1,17 +1,20 @@
 """
 chess_ui.py  —  IHM pygame pour le jeu d'échecs
 S'appuie sur : board.py, piece.py, coup_encoder.py
-Remplace uniquement la méthode tour() de Game (entrée console → clics souris)
+Remplace uniquement la méthode tour() de Game (entrée console → clics souris) #dans l'absolu pk pas, mais, alors on peut garder les fonctions
 """
+#peut_etre faire les fonctions tour avec des paramètres IHM = True si IHLM, false si console ? 
+
 #Une partie demandé à l'IA pour ne pas avoir à changer d'interpréteur (pas Anaconda)
-import subprocess
+#import subprocess
 import sys
-subprocess.check_call([sys.executable, "-m", "pip", "install", "pygame"])
+#subprocess.check_call([sys.executable, "-m", "pip", "install", "pygame"])
 
 import pygame
-from board import Board
-from piece import Pawn, Rook, Knight, Bishop, Queen, King
-from coup_encoder import Move
+from model.board import Board
+from model.piece import Pawn, Rook, Knight, Bishop, Queen, King
+from model.coup_encoder import Move
+#bizarre qu'il y ait pas game... Tu refais tout à la main ????
 
 # ── Constantes visuelles ─────────────────────────────────────────────────────
 SIZE    = 720           # taille du plateau en pixels
@@ -73,12 +76,20 @@ def piece_surface(piece, size: int) -> pygame.Surface:
 
     # la solution parce que les images c'est relou
     font_size = int(size * 0.75)
+    #import des polices temporaires à décommenter suivant windows/Mac
+    ############windows
     #try:
     #    font = pygame.font.SysFont('segoeuisymbol,symbola,unifont', font_size)
     #except Exception:
     #    font = pygame.font.Font(None, font_size)
-# pour Mac :
-    font = pygame.font.Font("/System/Library/Fonts/Apple Symbols.ttf", font_size)
+    ########## pour Mac :
+    #font = pygame.font.Font("/System/Library/Fonts/Apple Symbols.ttf", font_size)
+    # la version en théorie robuste : 
+    font = pygame.font.SysFont("segoeuisymbol", font_size)
+    if font is None:
+        font = pygame.font.SysFont("arial", font_size)
+    if font is None:
+        font = pygame.font.Font(None, font_size)
 
     ch   = UNICODE.get((piece.color, type(piece)), '?') #récupère le bon symbole dans le dic
     fg   = (255, 255, 255) if piece.color == 'white' else (15, 15, 15) #blanc pour les pièces blanches et quasi noir pour les autres
@@ -167,7 +178,7 @@ class ChessUI:
     Interface graphique.
     Utilise Board, les classes Piece et Move.
     """
-#Création de fenêtre+horloge gérant les 60 images/s et charge police/boutons/couleurs etc
+    #Création de fenêtre+horloge gérant les 60 images/s et charge police/boutons/couleurs etc
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((WIN_W, WIN_H))
@@ -207,9 +218,10 @@ class ChessUI:
 
     # état de jeu
     def reset(self):
+        # là import de la partie
         self.board    = Board()
-        self.moves_log: list[Move] = []
-        self.to_play  = 'white'
+        self.moves_log: list[Move] = [] ###############REDONDANCE ?
+        self.to_play  = 'white' ###############REDONDANCE ?
         self.selected = None         # case (i,j) sélectionnée
         self.legal    : list[Move] = []
         self.last_move: Move | None = None
@@ -238,7 +250,7 @@ class ChessUI:
     # ── coordonnées ──────────────────────────────────────────────────────────
     def to_screen(self, i, j):
         """(ligne, colonne) plateau → (x, y) pixel (coin haut-gauche de la case)."""
-        if self.flipped:
+        if self.flipped: #soucis d'affichage : inversion gauche droite mais pas haut bas
             return (7 - j) * CASE, (7 - i) * CASE
         return j * CASE, (7 - i) * CASE
 
@@ -254,6 +266,7 @@ class ChessUI:
 
     # ── undo ─────────────────────────────────────────────────────────────────
     def undo(self):
+    ##############REDONDANCE + VERSION PAS A JOUR 
         if not self.moves_log:
             return
         # annule le dernier coup du joueur courant + le coup adverse
@@ -269,15 +282,18 @@ class ChessUI:
 
     # logique fin de partie
     def _has_moves(self, color):
+    ###############REDONDANCE
         pieces = self.board.white_pieces() if color == 'white' else self.board.black_pieces()
         return any(p.possible_moves() for p in pieces)
 
     def _is_in_check(self, color):
+    ###############REDONDANCE
         king_pos = self.board.white_king if color == 'white' else self.board.black_king
         enemy    = 'black' if color == 'white' else 'white'
         return self.board.is_attacked_by(king_pos, enemy)
 
     def _after_move(self, m: Move):
+    ###############REDONDANCE
         """Applique le coup, met à jour le statut, passe la main."""
         self.board.apply_move(m)
         m_color   = m.piece.color

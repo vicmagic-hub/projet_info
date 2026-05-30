@@ -1,7 +1,11 @@
 from model.game import Game
+from model.IHM import ChessUI
+
+if __name__ == "__main__" :
+    ChessUI().run()
 
 #lancement du programme
-if __name__ == "__main__":
+if __name__ == "__essai__":
     valid = False
     while not valid :
         type =  input ("choisissez une partie en JcJ sur ce PC (local) ou contre IA (IA) ")

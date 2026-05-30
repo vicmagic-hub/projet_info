@@ -65,15 +65,7 @@ class ConsoleInterface():
                 return None
             #annulation Ctrl-Z
             elif s== "z" :
-                if len(self.game.moves) == 0 : continue
-                #suppression du coup de l'adversaire
-                m = self.game.moves.pop()
-                self.game.board.unapply_move(m)
-                if len(self.game.moves) == 0 : return None
-                #suppression du coup du joueur
-                m = self.game.moves.pop()
-                self.game.board.unapply_move(m)
-                return None
+                self.game.undo()
             #case non existante sur le plateau
             elif len(s) != 2 or ord('h')<ord(s[0]) or ord('a')>ord(s[0]) or 0>int(s[1]) or 8<int(s[1]) :
                 print("invalid case : make sure to tap something like: h1")

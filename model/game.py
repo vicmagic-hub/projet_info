@@ -35,7 +35,6 @@ class Game():
                 self.IA = MinmaxAI(3)
             self.opponent = self.IA.name                
         self.white_score = None
-        to_play = self.board.trait
     
     
     def play(self, m):
@@ -66,14 +65,14 @@ class Game():
     
 
     def undo(self):
-        if len(self.game.moves) != 0 : 
+        if len(self.moves) != 0 : 
             #suppression du coup de l'adversaire
-            m = self.game.moves.pop()
-            self.game.board.unapply_move(m)
-            if len(self.game.moves) != 0 : 
+            m = self.moves.pop()
+            self.board.unapply_move(m)
+            if len(self.moves) != 0 : 
                 #suppression du coup du joueur
-                m = self.game.moves.pop()
-                self.game.board.unapply_move(m)
+                m = self.moves.pop()
+                self.board.unapply_move(m)
 
 
     def __str__(self):

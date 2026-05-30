@@ -1,20 +1,6 @@
-"""
-chess_ui.py  —  IHM pygame pour le jeu d'échecs
-S'appuie sur : board.py, piece.py, coup_encoder.py
-Remplace uniquement la méthode tour() de Game (entrée console → clics souris) #dans l'absolu pk pas, mais, alors on peut garder les fonctions
-"""
-#peut_etre faire les fonctions tour avec des paramètres IHM = True si IHLM, false si console ? 
-
-#Une partie demandé à l'IA pour ne pas avoir à changer d'interpréteur (pas Anaconda)
-#import subprocess
 import sys
-#subprocess.check_call([sys.executable, "-m", "pip", "install", "pygame"])
-
 import pygame
-from model.board import Board
-from model.piece import Pawn, Rook, Knight, Bishop, Queen, King
-from model.coup_encoder import Move
-#bizarre qu'il y ait pas game... Tu refais tout à la main ????
+from model.game import Game
 
 # ── Constantes visuelles ─────────────────────────────────────────────────────
 SIZE    = 720           # taille du plateau en pixels
@@ -41,41 +27,28 @@ C_DOT       = ( 80, 160,  60, 100) #Point vert discret sur les cases ou on peut 
 C_LAST      = (200, 200,  50,  90) #jaune sur les deux cases su dernier coup joué
 C_CHECK_H   = (210,  45,  45, 140) #Rouge quand échec au roi
 
-# correspondance piece → unicode
+# correspondance marque → unicode
 UNICODE = {
-    ('white', Pawn):   '♙', ('black', Pawn):   '♟',
-    ('white', Rook):   '♖', ('black', Rook):   '♜',
-    ('white', Knight): '♘', ('black', Knight): '♞',
-    ('white', Bishop): '♗', ('black', Bishop): '♝',
-    ('white', Queen):  '♕', ('black', Queen):  '♛',
-    ('white', King):   '♔', ('black', King):   '♚',
+    ('white', ''):  '♙', ('black', ''):  '♟',
+    ('white', 'R'): '♖', ('black', 'R'): '♜',
+    ('white', 'N'): '♘', ('black', 'N'): '♞',
+    ('white', 'B'): '♗', ('black', 'B'): '♝',
+    ('white', 'Q'): '♕', ('black', 'Q'): '♛',
+    ('white', 'K'): '♔', ('black', 'K'): '♚',
 }
-
-# noms de fichiers assets (j'ai changé d'avis)
-ASSET_NAME = {Pawn:   'pawn',   Rook:   'rook', Knight: 'knight', Bishop: 'bishop', Queen:  'queen', King:  'king',}
 
 
 # Mémoïsation : on échange de la mémoire contre du temps de calcul
 _piece_cache: dict = {}
 
 def piece_surface(piece, size: int) -> pygame.Surface:
-    key = (type(piece), piece.color, size)
+    key = (piece.marque, piece.color, size)
+
     if key in _piece_cache:
         return _piece_cache[key]
 
-    # Essai image PNG
-    #try:
-    #    col  = 'white' if piece.color == 'white' else 'black'
-    #    name = ASSET_NAME[type(piece)]
-        img  = pygame.image.load(f"assets/{col}_{name}.png").convert_alpha()
-        img  = pygame.transform.smoothscale(img, (size, size))
-        _piece_cache[key] = img
-        return img
-    #except Exception:
-        pass
-
-    # la solution parce que les images c'est relou
     font_size = int(size * 0.75)
+
     #import des polices temporaires à décommenter suivant windows/Mac
     ############windows
     #try:
@@ -84,6 +57,7 @@ def piece_surface(piece, size: int) -> pygame.Surface:
     #    font = pygame.font.Font(None, font_size)
     ########## pour Mac :
     #font = pygame.font.Font("/System/Library/Fonts/Apple Symbols.ttf", font_size)
+
     # la version en théorie robuste : 
     font = pygame.font.SysFont("segoeuisymbol", font_size)
     if font is None:
@@ -91,7 +65,7 @@ def piece_surface(piece, size: int) -> pygame.Surface:
     if font is None:
         font = pygame.font.Font(None, font_size)
 
-    ch   = UNICODE.get((piece.color, type(piece)), '?') #récupère le bon symbole dans le dic
+    ch   = UNICODE.get((piece.color, piece.marque), '?') #récupère le bon symbole dans le dic
     fg   = (255, 255, 255) if piece.color == 'white' else (15, 15, 15) #blanc pour les pièces blanches et quasi noir pour les autres
     surf = pygame.Surface((size, size), pygame.SRCALPHA) #surface transparente de la taille d'une case
 
@@ -129,12 +103,11 @@ class Bouton:
                 and self.rect.collidepoint(ev.pos))
 #Renvoie True si trois conditions sont réunies simultanément : un événement clic souris a eu lieu, c'est le bouton gauche (button == 1), et le clic est à l'intérieur du rectangle.
 
-# Test pour la promotion
-PROMO_PIECES = ['Q', 'R', 'B', 'N']
-PROMO_LABELS = {'Q': '♕/♛', 'R': '♖/♜', 'B': '♗/♝', 'N': '♘/♞'}
 
 class PromoDialog:
     """Demande au joueur quelle pièce choisir lors d'une promotion."""
+    PROMO_PIECES = ['Q', 'R', 'B', 'N']
+    PROMO_LABELS = {'Q': '♕/♛', 'R': '♖/♜', 'B': '♗/♝', 'N': '♘/♞'}
     W, H = 320, 90 #Dimension de la boîte
 
     def __init__(self, screen_size):
@@ -142,12 +115,12 @@ class PromoDialog:
         self.rect = pygame.Rect((sw - self.W) // 2, (sh - self.H) // 2, self.W, self.H)
         #On centre la fenêtre au milieu de l'écran
         self._font = pygame.font.SysFont('georgia,serif', 15, bold=True)
-        self._big  = pygame.font.SysFont('segoeuisymbol,symbola,unifont', 32)
+        self._big = pygame.font.SysFont("segoeuisymbol", 32)
         bw = self.W // 4
         #création des 4 boutons côte à côte :
         self.btns = {
             p: pygame.Rect(self.rect.x + i * bw, self.rect.y + 32, bw, self.H - 32)
-            for i, p in enumerate(PROMO_PIECES)
+            for i, p in enumerate(self.PROMO_PIECES)
         }
 
 #Fonction de l'enfer : dessine ma boite (fond/bord/titre/les 4 boutons)
@@ -160,7 +133,7 @@ class PromoDialog:
             hov = r.collidepoint(pygame.mouse.get_pos())
             pygame.draw.rect(surf, C_BTN_H if hov else C_BTN, r, border_radius=4)
             pygame.draw.rect(surf, C_BORDER, r, 1, border_radius=4)
-            t2 = self._big.render(PROMO_LABELS[p], True, C_TEXT)
+            t2 = self._big.render(self.PROMO_LABELS[p], True, C_TEXT)
             surf.blit(t2, t2.get_rect(center=r.center))
 
 #Vérifie si le joueur a cliqué sur un des 4 boutons. Renvoie la lettre correspondante ('Q', 'R', 'B' ou 'N') ou None si le clic est ailleurs.
@@ -180,6 +153,12 @@ class ChessUI:
     """
     #Création de fenêtre+horloge gérant les 60 images/s et charge police/boutons/couleurs etc
     def __init__(self):
+        self.selected = None
+        self.legal = []
+        self.flipped  = False
+        self._promo_dialog = None
+        self._pending_promo_moves = []
+
         pygame.init()
         self.screen = pygame.display.set_mode((WIN_W, WIN_H))
         pygame.display.set_caption('Chess')
@@ -204,7 +183,10 @@ class ChessUI:
         self._promo_dialog: PromoDialog | None = None
         self._pending_promo_moves: list = []   # coups de même arrivée, type promo*
 
-        self.reset()
+        self.game = Game('Fuzco', "white", 0, "local", "Oczuf")
+
+        self.run()
+
 
     def _flat(self, rgba):
         s = pygame.Surface((CASE, CASE), pygame.SRCALPHA)
@@ -218,34 +200,11 @@ class ChessUI:
 
     # état de jeu
     def reset(self):
-        # là import de la partie
-        self.board    = Board()
-        self.moves_log: list[Move] = [] ###############REDONDANCE ?
-        self.to_play  = 'white' ###############REDONDANCE ?
         self.selected = None         # case (i,j) sélectionnée
-        self.legal    : list[Move] = []
-        self.last_move: Move | None = None
-        self.status   = ''
-        self.game_over= False
+        self.legal = []
         self.flipped  = False
         self._promo_dialog = None
         self._pending_promo_moves = []
-
-        # placement initial des pièces
-        for j in range(8):
-            Pawn('white', (1, j), self.board)
-            Pawn('black', (6, j), self.board)
-        Rook('white',   (0, 0), self.board);  Rook('white',   (0, 7), self.board)
-        Rook('black',   (7, 0), self.board);  Rook('black',   (7, 7), self.board)
-        Knight('white', (0, 1), self.board);  Knight('white', (0, 6), self.board)
-        Knight('black', (7, 1), self.board);  Knight('black', (7, 6), self.board)
-        Bishop('white', (0, 2), self.board);  Bishop('white', (0, 5), self.board)
-        Bishop('black', (7, 2), self.board);  Bishop('black', (7, 5), self.board)
-        Queen('white',  (0, 3), self.board);  Queen('black',  (7, 3), self.board)
-        kw = King('white', (0, 4), self.board)
-        kb = King('black', (7, 4), self.board)
-        self.board.white_king = (0, 4)
-        self.board.black_king = (7, 4)
 
     # ── coordonnées ──────────────────────────────────────────────────────────
     def to_screen(self, i, j):
@@ -264,63 +223,6 @@ class ChessUI:
             return 7 - r, 7 - c
         return 7 - r, c
 
-    # ── undo ─────────────────────────────────────────────────────────────────
-    def undo(self):
-    ##############REDONDANCE + VERSION PAS A JOUR 
-        if not self.moves_log:
-            return
-        # annule le dernier coup du joueur courant + le coup adverse
-        for _ in range(2):
-            if not self.moves_log:
-                break
-            self.moves_log = self.board.undo_last_move(self.moves_log)
-        self.last_move  = self.moves_log[-1] if self.moves_log else None
-        self.selected   = None
-        self.legal      = []
-        self.status     = ''
-        self.game_over  = False
-
-    # logique fin de partie
-    def _has_moves(self, color):
-    ###############REDONDANCE
-        pieces = self.board.white_pieces() if color == 'white' else self.board.black_pieces()
-        return any(p.possible_moves() for p in pieces)
-
-    def _is_in_check(self, color):
-    ###############REDONDANCE
-        king_pos = self.board.white_king if color == 'white' else self.board.black_king
-        enemy    = 'black' if color == 'white' else 'white'
-        return self.board.is_attacked_by(king_pos, enemy)
-
-    def _after_move(self, m: Move):
-    ###############REDONDANCE
-        """Applique le coup, met à jour le statut, passe la main."""
-        self.board.apply_move(m)
-        m_color   = m.piece.color
-        next_color = 'black' if m_color == 'white' else 'white'
-
-        self.last_move = m
-        self.moves_log.append(m)
-        self.selected  = None
-        self.legal     = []
-
-        if not self._has_moves(next_color):
-            if self._is_in_check(next_color):
-                m.is_a_mat = True
-                winner = 'Blancs' if next_color == 'black' else 'Noirs'
-                self.status    = f'Échec et mat — {winner} gagnent !'
-            else:
-                self.status = 'Pat — nulle !'
-            self.game_over = True
-            return
-
-        if self._is_in_check(next_color):
-            m.is_a_check = True
-            self.status  = 'Échec !'
-        else:
-            self.status = ''
-
-        self.to_play = next_color
 
     # gestion clic plateau
     def _board_click(self, i, j):
@@ -330,44 +232,50 @@ class ChessUI:
         if self._promo_dialog:
             return   # géré dans handle_event
 
-        piece = self.board.squares[i][j]
+        piece = self.game.board.squares[i][j]
 
         # une pièce déjà sélectionnée
         if self.selected:
             fi, fj = self.selected
             # cherche un coup légal qui arrive en (i,j)
-            matching = [m for m in self.legal if m.arrivee == (i, j)]
+            moves = [m for m in self.legal if m.arrivee == (i, j)]
 
-            if matching:
+            if moves:
                 promo_types = {'promotion', 'promoprise'}
-                promo_moves = [m for m in matching if m.type in promo_types]
+                promo_moves = [m for m in moves if m.type in promo_types]
 
                 if promo_moves:
                     # plusieurs choix de pièce → ouvre le dialogue
                     self._pending_promo_moves = promo_moves
                     self._promo_dialog = PromoDialog(self.screen.get_size())
                 else:
-                    self._after_move(matching[0])
+                    self.chosen_move = moves[0]
+
+                self.selected = None
+                self.legal = []
                 return
 
             # clique sur une autre pièce alliée → change la sélection
-            if piece and piece.color == self.to_play:
+            if piece and piece.color == self.game.board.trait:
                 self.selected = (i, j)
-                self.legal    = piece.possible_moves()
+                self.legal = piece.possible_moves()
                 return
 
             # clique ailleurs → désélectionne
             self.selected = None
-            self.legal    = []
+            self.legal = []
             return
 
-        # aucune sélection : choisir une pièce alliée
-        if piece and piece.color == self.to_play:
+        #Pas encore de sélection
+        if piece and piece.color == self.game.board.trait:
             self.selected = (i, j)
-            self.legal    = piece.possible_moves()
+            self.legal = piece.possible_moves()
 
     # gestion événements
     def handle_event(self, ev):
+        #si fin de partie, ne pas traiter
+        if self.game.board.end:
+            return
         # dialogue promotion
         if self._promo_dialog:
             choice = self._promo_dialog.clicked(ev)
@@ -376,27 +284,20 @@ class ChessUI:
                           if x.promotion_piece == choice), self._pending_promo_moves[0])
                 self._promo_dialog        = None
                 self._pending_promo_moves = []
-                self._after_move(m)
+                self.chosen_move = m
             return
 
         if self.btn_new.clicked(ev):
-            self.reset(); return
+            #self.reset(); return
+            pass #à définir : réinitialiser la partie
         if self.btn_flip.clicked(ev):
             self.flipped = not self.flipped; return
         if self.btn_undo.clicked(ev):
-            self.undo(); return
-
-        if ev.type == pygame.KEYDOWN:
-            if ev.key == pygame.K_n:
-                self.reset()
-            elif ev.key == pygame.K_z:
-                self.undo()
-            elif ev.key == pygame.K_f:
-                self.flipped = not self.flipped
+            self.game.undo(); return
 
         if (ev.type == pygame.MOUSEBUTTONDOWN
                 and ev.button == 1
-                and not self.game_over):
+                and not self.game.board.end):
             pos = self.from_screen(*ev.pos)
             if pos:
                 self._board_click(*pos)
@@ -411,6 +312,9 @@ class ChessUI:
         pygame.display.flip()
 
     def _draw_board(self):
+        board = self.game.board
+        trait = board.trait
+        last_move = self.game.moves[-1] if self.game.moves else None
         # cases
         for i in range(8):
             for j in range(8):
@@ -419,14 +323,14 @@ class ChessUI:
                 pygame.draw.rect(self.screen, color, (x, y, CASE, CASE))
 
         # dernier coup joué
-        if self.last_move:
-            for pos in (self.last_move.depart, self.last_move.arrivee):
+        if last_move:
+            for pos in (last_move.depart, last_move.arrivee):
                 x, y = self.to_screen(*pos)
                 self.screen.blit(self._ov_last, (x, y))
 
         # roi en échec
-        if not self.game_over and self._is_in_check(self.to_play):
-            kp = self.board.white_king if self.to_play == 'white' else self.board.black_king
+        if last_move and not board.end and last_move.is_a_check:
+            kp = board.white_king if self.game.board.trait == 'white' else board.black_king
             x, y = self.to_screen(*kp)
             self.screen.blit(self._ov_check, (x, y))
 
@@ -444,7 +348,7 @@ class ChessUI:
         # pièces
         for i in range(8):
             for j in range(8):
-                p = self.board.squares[i][j]
+                p = board.squares[i][j]
                 if p:
                     x, y = self.to_screen(i, j)
                     self.screen.blit(piece_surface(p, CASE), (x, y))
@@ -473,17 +377,11 @@ class ChessUI:
         self.screen.blit(t, (sx + 14, 14))
 
         # tour
-        if not self.game_over:
-            who  = 'Blancs' if self.to_play == 'white' else 'Noirs'
-            tcol = (235, 235, 225) if self.to_play == 'white' else (90, 90, 80)
+        if not self.game.board.end:
+            who  = 'Blancs' if self.game.board.trait == 'white' else 'Noirs'
+            tcol = (235, 235, 225) if self.game.board.trait == 'white' else (90, 90, 80)
             t2   = self.fn_md.render(f'● Tour des {who}', True, tcol)
             self.screen.blit(t2, (sx + 12, 46))
-
-        # statut
-        if self.status:
-            scol = (215, 70, 70) if 'mat' in self.status or 'Pat' in self.status else (220, 200, 70)
-            t3   = self.fn_md.render(self.status, True, scol)
-            self.screen.blit(t3, (sx + 12, 70))
 
         # séparateur
         pygame.draw.line(self.screen, C_BORDER, (sx + 10, 96), (sx + SIDEBAR - 10, 96), 1)
@@ -492,9 +390,9 @@ class ChessUI:
         self.screen.blit(self.fn_md.render('Historique', True, C_TEXT_DIM), (sx + 12, 102))
         y    = 124
         rows = (WIN_H - 200) // 16
-        log  = self.moves_log[-(rows * 2):]   # garde les derniers coups
+        log  = self.game.moves[-(rows * 2):]   # garde les derniers coups
         i    = 0
-        num  = max(1, len(self.moves_log) - len(log)) // 2 + 1
+        num  = max(1, len(self.game.moves) - len(log)) // 2 + 1
         while i < len(log):
             w_str = str(log[i]).strip()
             b_str = str(log[i + 1]).strip() if i + 1 < len(log) else ''
@@ -517,7 +415,11 @@ class ChessUI:
                 if ev.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                self.handle_event(ev)
+            self.handle_event(ev)
+            if hasattr(self, 'chosen_move') and self.chosen_move:
+                self.game.play(self.chosen_move)
+                self.chosen_move = None
+
             self.draw()
             self.clock.tick(60)
 

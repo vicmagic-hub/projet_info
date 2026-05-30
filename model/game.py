@@ -64,7 +64,18 @@ class Game():
             else :
                 self.white_score = 0.5
     
-            
+
+    def undo(self):
+        if len(self.game.moves) != 0 : 
+            #suppression du coup de l'adversaire
+            m = self.game.moves.pop()
+            self.game.board.unapply_move(m)
+            if len(self.game.moves) != 0 : 
+                #suppression du coup du joueur
+                m = self.game.moves.pop()
+                self.game.board.unapply_move(m)
+
+
     def __str__(self):
         """
         Affichage de la partie dans la console

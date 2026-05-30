@@ -45,7 +45,7 @@ class ConsoleInterface():
                     m = self.get_human_move()
                     self.game.play(m)
                 else :
-                    m = self.game.get_AI_move()
+                    m = self.get_AI_move()
                     self.game.play(m)
         #affichage de la partie
         print(self.game)

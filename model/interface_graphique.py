@@ -104,6 +104,35 @@ class Bouton:
 #Renvoie True si trois conditions sont réunies simultanément : un événement clic souris a eu lieu, c'est le bouton gauche (button == 1), et le clic est à l'intérieur du rectangle.
 
 
+class TextInput:
+    def __init__(self, rect, placeholder=""):
+        self.rect = pygame.Rect(rect)
+        self.text = ""
+        self.placeholder = placeholder
+        self.active = False
+        self.font = pygame.font.SysFont("georgia", 18)
+
+    def handle_event(self, ev):
+        if ev.type == pygame.MOUSEBUTTONDOWN:
+            self.active = self.rect.collidepoint(ev.pos)
+
+        if ev.type == pygame.KEYDOWN and self.active:
+            if ev.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            elif ev.key == pygame.K_RETURN:
+                self.active = False
+            else:
+                if ev.unicode.isprintable():
+                    self.text += ev.unicode
+
+    def draw(self, screen):
+        color = (120, 200, 120) if self.active else (90, 90, 90)
+        pygame.draw.rect(screen, color, self.rect, 2)
+
+        display = self.text if self.text else self.placeholder
+        surf = self.font.render(display, True, (220, 220, 220))
+        screen.blit(surf, (self.rect.x + 8, self.rect.y + 6))
+
 class PromoDialog:
     """Demande au joueur quelle pièce choisir lors d'une promotion."""
     PROMO_PIECES = ['Q', 'R', 'B', 'N']
@@ -183,9 +212,90 @@ class ChessUI:
         self._promo_dialog: PromoDialog | None = None
         self._pending_promo_moves: list = []   # coups de même arrivée, type promo*
 
-        self.game = Game('Fuzco', "white", 0, "local", "Oczuf")
+        self.show_menu()
 
         self.run()
+
+
+    def show_menu(self):
+        self.game = None
+
+        font = pygame.font.SysFont("georgia", 24, bold=True)
+
+        # inputs IA
+        ia_name = TextInput((200, 150, 300, 35), "Pseudo joueur")
+        ia_level = 1
+
+        # inputs PvP
+        p1 = TextInput((200, 320, 300, 35), "Blanc")
+        p2 = TextInput((200, 370, 300, 35), "Noir")
+
+        clock = pygame.time.Clock()
+
+        while self.game is None:
+            for ev in pygame.event.get():
+                if ev.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                ia_name.handle_event(ev)
+                p1.handle_event(ev)
+                p2.handle_event(ev)
+
+                if ev.type == pygame.MOUSEBUTTONDOWN:
+
+                    # bouton IA
+                    if pygame.Rect(200, 200, 300, 50).collidepoint(ev.pos):
+                        self.game = Game(
+                            ia_name.text or "Joueur",
+                            "white",
+                            ia_level,
+                            "IA",
+                            None
+                        )
+                        self.IA = self.game.IA
+
+                    # bouton PvP
+                    if pygame.Rect(200, 400, 300, 50).collidepoint(ev.pos):
+                        self.game = Game(
+                            p1.text or "Blanc",
+                            "white",
+                            0,
+                            "local",
+                            p2.text or "Noir"
+                        )
+
+                    # bouton reprendre (grisé)
+                    if pygame.Rect(200, 500, 300, 50).collidepoint(ev.pos):
+                        pass
+
+            # draw
+            self.screen.fill((30,30,30))
+
+            # IA block
+            pygame.draw.rect(self.screen, (60,60,60), (180, 120, 360, 160))
+            ia_name.draw(self.screen)
+
+            txt = font.render(f"Niveau IA: {ia_level}", True, (200,200,200))
+            self.screen.blit(txt, (200, 260))
+
+            pygame.draw.rect(self.screen, (100,180,100), (200, 200, 300, 50))
+            self.screen.blit(font.render("Jouer vs IA", True, (0,0,0)), (260, 215))
+
+            # PvP block
+            pygame.draw.rect(self.screen, (60,60,60), (180, 290, 360, 180))
+            p1.draw(self.screen)
+            p2.draw(self.screen)
+
+            pygame.draw.rect(self.screen, (100,180,100), (200, 400, 300, 50))
+            self.screen.blit(font.render("Jouer local", True, (0,0,0)), (260, 415))
+
+            # disabled
+            pygame.draw.rect(self.screen, (80,80,80), (200, 500, 300, 50))
+            self.screen.blit(font.render("Reprendre (bientôt)", True, (150,150,150)), (220, 515))
+
+            pygame.display.flip()
+            clock.tick(60)
 
 
     def _flat(self, rgba):
@@ -376,6 +486,10 @@ class ChessUI:
         t = self.fn_lg.render('♟  Chess', True, C_TEXT)
         self.screen.blit(t, (sx + 14, 14))
 
+        # joueurs
+        t_players = self.fn_md.render(f"{self.game.player_1} vs {self.game.opponent}", True, C_TEXT)
+        self.screen.blit(t_players, (sx + 12, 90))
+
         # tour
         if not self.game.board.end:
             who  = 'Blancs' if self.game.board.trait == 'white' else 'Noirs'
@@ -388,7 +502,7 @@ class ChessUI:
 
         # historique
         self.screen.blit(self.fn_md.render('Historique', True, C_TEXT_DIM), (sx + 12, 102))
-        y    = 124
+        y    = 200
         rows = (WIN_H - 200) // 16
         log  = self.game.moves[-(rows * 2):]   # garde les derniers coups
         i    = 0
@@ -415,14 +529,14 @@ class ChessUI:
                 if ev.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-            self.handle_event(ev)
+                self.handle_event(ev)
             if hasattr(self, 'chosen_move') and self.chosen_move:
                 self.game.play(self.chosen_move)
                 self.chosen_move = None
 
+            if (self.game.type == 'IA' and self.game.board.trait != self.game.side and not self.game.board.end):
+                m = self.IA.select_move(self.game.board) 
+                self.game.play(m)
+
             self.draw()
             self.clock.tick(60)
-
-
-if __name__ == '__main__':
-    ChessUI().run()

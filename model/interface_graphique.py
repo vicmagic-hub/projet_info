@@ -187,6 +187,7 @@ class ChessUI:
         self.flipped  = False
         self._promo_dialog = None
         self._pending_promo_moves = []
+        self.history_scroll = 0
 
         pygame.init()
         self.screen = pygame.display.set_mode((WIN_W, WIN_H))
@@ -217,18 +218,50 @@ class ChessUI:
         self.run()
 
 
+    def _draw_card(self, x, y, w, h, title):
+        pygame.draw.rect(
+            self.screen,
+            C_SIDEBAR,
+            (x, y, w, h),
+            border_radius=12
+        )
+
+        pygame.draw.rect(
+            self.screen,
+            C_BORDER,
+            (x, y, w, h),
+            2,
+            border_radius=12
+        )
+
+        font = pygame.font.SysFont("georgia", 20, bold=True)
+        t = font.render(title, True, C_TEXT)
+        self.screen.blit(t, (x + 20, y + 15))
+
     def show_menu(self):
         self.game = None
 
-        font = pygame.font.SysFont("georgia", 24, bold=True)
+        pygame.init()
+
+        title_font = pygame.font.SysFont("georgia", 44, bold=True)
+        sub_font   = pygame.font.SysFont("georgia", 18, bold=True)
+
+        # layout global
+        CARD_W = 520
+        CARD_H = 170
+        CENTER_X = (WIN_W - CARD_W) // 2
 
         # inputs IA
-        ia_name = TextInput((200, 150, 300, 35), "Pseudo joueur")
-        ia_level = 1
+        ia_name = TextInput((CENTER_X + 180, 170, 260, 34), "Pseudo")
+        self.ia_level = 1
+        btn_minus = Bouton((CENTER_X + 180, 215, 40, 30), "-")
+        btn_plus  = Bouton((CENTER_X + 420, 215, 40, 30), "+")
+        btn_ai_play = Bouton((CENTER_X + 180, 250, 220, 34), "Jouer IA")
 
         # inputs PvP
-        p1 = TextInput((200, 320, 300, 35), "Blanc")
-        p2 = TextInput((200, 370, 300, 35), "Noir")
+        p1 = TextInput((CENTER_X + 180, 420, 260, 34), "Blanc")
+        p2 = TextInput((CENTER_X + 180, 465, 260, 34), "Noir")
+        btn_local_play = Bouton((CENTER_X + 180, 500, 220, 34), "Jouer local")
 
         clock = pygame.time.Clock()
 
@@ -242,21 +275,27 @@ class ChessUI:
                 p1.handle_event(ev)
                 p2.handle_event(ev)
 
+                if btn_minus.clicked(ev):
+                    self.ia_level = max(1, self.ia_level - 1)
+
+                if btn_plus.clicked(ev):
+                    self.ia_level = min(2, self.ia_level + 1)
+
                 if ev.type == pygame.MOUSEBUTTONDOWN:
 
-                    # bouton IA
-                    if pygame.Rect(200, 200, 300, 50).collidepoint(ev.pos):
+                    # ───── Carte IA ─────
+                    if btn_ai_play.clicked(ev):
                         self.game = Game(
                             ia_name.text or "Joueur",
                             "white",
-                            ia_level,
+                            self.ia_level,
                             "IA",
                             None
                         )
                         self.IA = self.game.IA
 
-                    # bouton PvP
-                    if pygame.Rect(200, 400, 300, 50).collidepoint(ev.pos):
+                    # ───── Carte PvP ─────
+                    if btn_local_play.clicked(ev):
                         self.game = Game(
                             p1.text or "Blanc",
                             "white",
@@ -265,34 +304,48 @@ class ChessUI:
                             p2.text or "Noir"
                         )
 
-                    # bouton reprendre (grisé)
-                    if pygame.Rect(200, 500, 300, 50).collidepoint(ev.pos):
-                        pass
+                    # ───── Carte charger non traitée ─────
 
-            # draw
-            self.screen.fill((30,30,30))
 
-            # IA block
-            pygame.draw.rect(self.screen, (60,60,60), (180, 120, 360, 160))
+            # ───── fond ─────
+            self.screen.fill(C_BG)
+
+            # ───── titre ─────
+            title = title_font.render("♟ Chess", True, C_TEXT)
+            self.screen.blit(title, title.get_rect(center=(WIN_W//2, 60)))
+
+            subtitle = sub_font.render("Nouvelle partie", True, C_TEXT_DIM)
+            self.screen.blit(subtitle, subtitle.get_rect(center=(WIN_W//2, 95)))
+
+            # ───── CARTE IA ─────
+            self._draw_card(CENTER_X, 120, CARD_W, CARD_H, "Jouer contre l'IA")
+
+            ia_label = sub_font.render(f"Niveau IA : {self.ia_level}", True, C_TEXT)
+            self.screen.blit(ia_label, (CENTER_X + 30, 160))
+
             ia_name.draw(self.screen)
+            btn_minus.draw(self.screen)
+            btn_plus.draw(self.screen)
 
-            txt = font.render(f"Niveau IA: {ia_level}", True, (200,200,200))
-            self.screen.blit(txt, (200, 260))
+            # bouton lancer IA
+            pygame.draw.rect(self.screen, C_BTN_ACT, (CENTER_X + 180, 250, 220, 34), border_radius=6)
+            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),
+                            (CENTER_X + 260, 257))
 
-            pygame.draw.rect(self.screen, (100,180,100), (200, 200, 300, 50))
-            self.screen.blit(font.render("Jouer vs IA", True, (0,0,0)), (260, 215))
+            # ───── CARTE PvP ─────
+            self._draw_card(CENTER_X, 360, CARD_W, CARD_H, "Partie locale")
 
-            # PvP block
-            pygame.draw.rect(self.screen, (60,60,60), (180, 290, 360, 180))
             p1.draw(self.screen)
             p2.draw(self.screen)
 
-            pygame.draw.rect(self.screen, (100,180,100), (200, 400, 300, 50))
-            self.screen.blit(font.render("Jouer local", True, (0,0,0)), (260, 415))
+            pygame.draw.rect(self.screen, C_BTN_ACT, (CENTER_X + 180, 500, 220, 34), border_radius=6)
+            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),
+                            (CENTER_X + 260, 507))
 
-            # disabled
-            pygame.draw.rect(self.screen, (80,80,80), (200, 500, 300, 50))
-            self.screen.blit(font.render("Reprendre (bientôt)", True, (150,150,150)), (220, 515))
+            # ───── CARTE disabled ─────
+            self._draw_card(CENTER_X, 600, CARD_W, CARD_H, "Reprendre partie")
+            self.screen.blit(sub_font.render("Bientôt disponible", True, C_TEXT_DIM),
+                            (CENTER_X + 200, 660))
 
             pygame.display.flip()
             clock.tick(60)
@@ -411,6 +464,11 @@ class ChessUI:
             pos = self.from_screen(*ev.pos)
             if pos:
                 self._board_click(*pos)
+        
+        if ev.type == pygame.MOUSEWHEEL:
+            # scroll vers le haut = voir les coups anciens
+            self.history_scroll -= ev.y
+            self.history_scroll = max(0, self.history_scroll)
 
     # rendu
     def draw(self):
@@ -479,45 +537,78 @@ class ChessUI:
 
     def _draw_sidebar(self):
         sx = SIZE
-        pygame.draw.rect(self.screen, C_SIDEBAR, (sx, 0, SIDEBAR, WIN_H))
+        self.screen.fill(C_SIDEBAR, (sx, 0, SIDEBAR, WIN_H))
         pygame.draw.line(self.screen, C_BORDER, (sx, 0), (sx, WIN_H), 2)
 
-        # titre
-        t = self.fn_lg.render('♟  Chess', True, C_TEXT)
-        self.screen.blit(t, (sx + 14, 14))
+        HEADER_H = 90
+        BTN_H = 140
+        PAD = 10
 
-        # joueurs
-        t_players = self.fn_md.render(f"{self.game.player_1} vs {self.game.opponent}", True, C_TEXT)
-        self.screen.blit(t_players, (sx + 12, 90))
+        # ── HEADER ─────────────────────────────
+        title = self.fn_lg.render('♟ Chess', True, C_TEXT)
+        self.screen.blit(title, (sx + PAD, PAD))
+
+        players = f"{self.game.player_1} vs {self.game.opponent}"
+        t_players = self.fn_md.render(players, True, C_TEXT_DIM)
+        self.screen.blit(t_players, (sx + PAD, 40))
 
         # tour
         if not self.game.board.end:
-            who  = 'Blancs' if self.game.board.trait == 'white' else 'Noirs'
-            tcol = (235, 235, 225) if self.game.board.trait == 'white' else (90, 90, 80)
-            t2   = self.fn_md.render(f'● Tour des {who}', True, tcol)
-            self.screen.blit(t2, (sx + 12, 46))
+            who = 'Blancs' if self.game.board.trait == 'white' else 'Noirs'
+            col = (235, 235, 225) if self.game.board.trait == 'white' else (120, 120, 120)
+            t2 = self.fn_md.render(f"Tour : {who}", True, col)
+            self.screen.blit(t2, (sx + PAD, 65))
+        else : 
+            t2 = self.fn_md.render(f"Partie terminée : ({self.game.white_score}, {str(1 - int(self.game.white_score))})", True, C_TEXT_DIM)
+            self.screen.blit(t2, (sx + PAD, 65))
 
-        # séparateur
-        pygame.draw.line(self.screen, C_BORDER, (sx + 10, 96), (sx + SIDEBAR - 10, 96), 1)
+        pygame.draw.line(self.screen, C_BORDER,
+                        (sx + 10, HEADER_H),
+                        (sx + SIDEBAR - 10, HEADER_H), 1)
 
-        # historique
-        self.screen.blit(self.fn_md.render('Historique', True, C_TEXT_DIM), (sx + 12, 102))
-        y    = 200
-        rows = (WIN_H - 200) // 16
-        log  = self.game.moves[-(rows * 2):]   # garde les derniers coups
-        i    = 0
-        num  = max(1, len(self.game.moves) - len(log)) // 2 + 1
-        while i < len(log):
-            w_str = str(log[i]).strip()
-            b_str = str(log[i + 1]).strip() if i + 1 < len(log) else ''
-            line  = f'{num:>3}. {w_str:<9} {b_str}'
-            t4    = self.fn_mo.render(line, True, C_TEXT)
-            self.screen.blit(t4, (sx + 10, y))
-            y    += 16
-            i    += 2
-            num  += 1
+        # ── HISTORIQUE (zone dédiée) ─────────────────────────────
+        hist_top = HEADER_H + PAD
+        hist_bottom = WIN_H - BTN_H
+        line_h = 16
 
-        # boutons
+        self.screen.blit(self.fn_md.render("Historique", True, C_TEXT_DIM),
+                        (sx + PAD, hist_top))
+
+        log = self.game.moves
+
+        rows = (hist_bottom - hist_top) // line_h
+        max_start = max(0, len(log) - rows * 2)
+
+        # scroll en nombre de demi-coups
+        start = self.history_scroll * 2
+        start = min(start, max_start)
+
+        visible = log[start:start + rows * 2]
+
+        y = hist_top + 25
+        i = 0
+        num = start // 2 + 1
+
+        while i < len(visible):
+            w = str(visible[i]).strip()
+            b = str(visible[i + 1]).strip() if i + 1 < len(visible) else ""
+
+            line = f"{num:>3}. {w:<8} {b}"
+            surf = self.fn_mo.render(line, True, C_TEXT)
+
+            self.screen.blit(surf, (sx + PAD, y))
+
+            y += line_h
+            i += 2
+            num += 1
+
+        # ── BOUTONS (zone fixe en bas) ─────────────────────────────
+        btn_y = WIN_H - BTN_H + 10
+
+        self.btn_undo.rect.y = btn_y
+        self.btn_new.rect.y = btn_y + 40
+        self.btn_flip.rect.y = btn_y + 80
+
         self.btn_undo.draw(self.screen)
         self.btn_new.draw(self.screen)
         self.btn_flip.draw(self.screen)
@@ -537,6 +628,6 @@ class ChessUI:
             if (self.game.type == 'IA' and self.game.board.trait != self.game.side and not self.game.board.end):
                 m = self.IA.select_move(self.game.board) 
                 self.game.play(m)
-
+           
             self.draw()
             self.clock.tick(60)

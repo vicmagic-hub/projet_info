@@ -1,7 +1,9 @@
 from datetime import date
+from pathlib import Path
 
 from model.board import Board
 from model.piece import Pawn, Rook, Knight, Bishop, Queen, King
+from model.coup_encoder import Move
 from ai.ai_lab import DumbAI, MinmaxAI
 
 
@@ -39,14 +41,9 @@ class Game():
     
     def play(self, m):
         """
-        Méthode pour faire jouer un tour à un joueur humain
-        Déroulé : 
-            Sélection d'une pièce 
-            Affichage des coups possibles pour cette pièce
-            Sélection du coup à jouer
-            Traitement du coup et mise à jour du plateau
-            Enregistrement du coup
-            si fin de partie, actualisation du score
+        Méthode pour appliquer un coup
+        entrée : coup à appliquer
+        applique le coup sur le plateau, l'enregistre dans l'historique et traite les fins de partie
         """
         #application du coup
         self.board.apply_move(m)
@@ -62,9 +59,20 @@ class Game():
                     self.white_score = 0
             else :
                 self.white_score = 0.5
+            #effacement de la partie dans la sauvegarde
+            folder = Path("game")
+            folder.mkdir(exist_ok=True)
+            for file in folder.iterdir():
+                if file.is_file():
+                    file.unlink()
+        else : 
+            self.save()
     
 
     def undo(self):
+        """
+        Méthode pour faire un Ctrl Z : annulation du dernier coup de l'adversaire, et du dernier coup du joueur
+        """
         if len(self.moves) != 0 : 
             #suppression du coup de l'adversaire
             m = self.moves.pop()
@@ -78,16 +86,24 @@ class Game():
     def __str__(self):
         """
         Affichage de la partie dans la console
-        renvoie la lsite des coups effectués, une description de la partie et le score
+        renvoie la liste des coups effectués, une description de la partie et le score
         """
-        s="/////////////////////////////////////////////////////////////////////////////////// \n"
-        s+="/////////////////////////////////////////////////////////////////////////////////// \n"
-        s+= "\n"
-        if self.side == 'white' : 
-            s+= "Partie du " + self.date + " de " + self.player_1 + " contre " + self.opponent + '\n'
-        else :
-            s+= "Partie du " + self.date + " de " + self.opponent + " contre " + self.player_1 + '\n'
-        s+= "Score : (" + str(self.white_score) + " - " + str(1- self.white_score) + ")\n"
+        #description de la partie
+        s = "[Date \"" + self.date + "\"]\n"
+
+        if self.side == 'white':
+            s += "[White \"" + self.player_1 + "\"]\n"
+            s += "[Black \"" + self.opponent + "\"]\n"
+        else:
+            s += "[White \"" + self.opponent + "\"]\n"
+            s += "[Black \"" + self.player_1 + "\"]\n"
+
+        s += "[Side \"" + self.side + "\"]\n"
+        s += "[Type \"" + self.type + "\"]\n"
+        if self.white_score is not None:
+            s += "[Result \"" + str(self.white_score) + "-" + str(1 - self.white_score) + "\"]\n\n"
+
+        #Passage à l'affichage des coups
         for i in range(0,len(self.moves),2):
             if (i+1)//2 < 10 :
                 s += str((i+1)//2) + " "
@@ -100,3 +116,87 @@ class Game():
         if self.board.end :
             s+= "(" + str(self.white_score) + " - " + str(1- self.white_score) + ")"
         return s
+
+
+    def save(self):
+        """
+        sauvegarde de la partie dans un fichier txt
+        écrasement des autres parties sauvegardées
+        """
+        path = "game/save.txt"
+        s = str(self)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(s)
+        
+    @classmethod
+    def load_game(cls):
+        """
+        création de partie en "lecture" depuis partie stockée en local en txt
+        renvoie la partie correspondante
+        """
+        path = "game/save.txt"
+
+        with open(path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f]
+
+        #description de la partie
+        i = 0
+        while i < len(lines) and lines[i].startswith("["):
+            line = lines[i]
+
+            if line.startswith("[Date"):
+                date = line.split('"')[1]
+
+            elif line.startswith("[White"):
+                white = line.split('"')[1]
+
+            elif line.startswith("[Black"):
+                black = line.split('"')[1]
+
+            elif line.startswith("[Side"):
+                side = line.split('"')[1]
+
+            elif line.startswith("[Type"):
+                type = line.split('"')[1]
+
+            i += 1
+        #création de la partie
+        if side == 'white' :
+            player_1 = white
+            opponent = black
+        else :
+            player_1 = black
+            opponent = white
+        level = 0
+        if type == 'IA' :
+            print('opponent : ' + opponent)
+            if opponent == "IAdifficilementpire" :
+                level = 1
+            elif opponent == "IAmoyendsefaireavoir" :
+                level = 2 
+        game = cls(player_1, side, level, type, opponent)
+
+        # saut lignes vides
+        while i < len(lines) and lines[i] == "":
+            i += 1
+
+        #Passage aux coups
+        color = 'white'
+        while i < len(lines) :
+            line = lines[i].strip()
+            if not line:
+                i += 1
+                continue
+
+            if ":" in line :
+                _, moves_part = line.split(":", 1)
+                moves_str = moves_part.strip().split()
+
+                for m in moves_str :
+                    move = Move.from_str(m, color, game.board)
+                    game.play(move)
+                    if color == 'white' : color = 'black'
+                    else : color = 'white'
+            i += 1
+
+        return game

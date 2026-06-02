@@ -1,5 +1,6 @@
 import sys
 import pygame
+from pathlib import Path
 from model.game import Game
 
 # ── Constantes visuelles ─────────────────────────────────────────────────────
@@ -239,6 +240,9 @@ class ChessUI:
         self.screen.blit(t, (x + 20, y + 15))
 
     def show_menu(self):
+        save_path = Path("game/save.txt")
+        has_save = save_path.exists()
+        
         self.game = None
 
         pygame.init()
@@ -262,6 +266,9 @@ class ChessUI:
         p1 = TextInput((CENTER_X + 180, 420, 260, 34), "Blanc")
         p2 = TextInput((CENTER_X + 180, 465, 260, 34), "Noir")
         btn_local_play = Bouton((CENTER_X + 180, 500, 220, 34), "Jouer local")
+
+        #load
+        btn_rect = None
 
         clock = pygame.time.Clock()
 
@@ -304,7 +311,10 @@ class ChessUI:
                             p2.text or "Noir"
                         )
 
-                    # ───── Carte charger non traitée ─────
+                    # ───── Carte charger ─────
+                    if has_save and btn_rect.collidepoint(ev.pos):
+                        self.game = Game.load_game()
+                        self.IA = self.game.IA
 
 
             # ───── fond ─────
@@ -342,10 +352,25 @@ class ChessUI:
             self.screen.blit(sub_font.render("Jouer", True, C_TEXT),
                             (CENTER_X + 260, 507))
 
-            # ───── CARTE disabled ─────
+            # ───── CARTE charger ─────
             self._draw_card(CENTER_X, 600, CARD_W, CARD_H, "Reprendre partie")
-            self.screen.blit(sub_font.render("Bientôt disponible", True, C_TEXT_DIM),
-                            (CENTER_X + 200, 660))
+
+            if has_save:
+                btn_rect = pygame.Rect(CENTER_X + 180, 650, 220, 34)
+
+                pygame.draw.rect(self.screen, C_BTN_ACT, btn_rect, border_radius=6)
+                self.screen.blit(
+                    sub_font.render("Reprendre", True, C_TEXT),
+                    (CENTER_X + 250, 657)
+                )
+            else:
+                btn_rect = pygame.Rect(CENTER_X + 180, 650, 220, 34)
+
+                pygame.draw.rect(self.screen, C_BTN, btn_rect, border_radius=6)
+                self.screen.blit(
+                    sub_font.render("Aucune sauvegarde", True, C_TEXT_DIM),
+                    (CENTER_X + 210, 657)
+                )
 
             pygame.display.flip()
             clock.tick(60)
@@ -621,13 +646,12 @@ class ChessUI:
                     pygame.quit()
                     sys.exit()
                 self.handle_event(ev)
+            if (self.game.type == 'IA' and self.game.board.trait != self.game.side and not self.game.board.end):
+                m = self.IA.select_move(self.game.board) 
+                self.game.play(m)
             if hasattr(self, 'chosen_move') and self.chosen_move:
                 self.game.play(self.chosen_move)
                 self.chosen_move = None
 
-            if (self.game.type == 'IA' and self.game.board.trait != self.game.side and not self.game.board.end):
-                m = self.IA.select_move(self.game.board) 
-                self.game.play(m)
-           
             self.draw()
             self.clock.tick(60)

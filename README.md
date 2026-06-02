@@ -27,7 +27,7 @@ Les seules bibliothèques utilisées sont :
 ## Jeu
 - Partie locale joueur contre joueur
 - Partie contre IA
-- Affichage ASCII du plateau
+- Affichage ASCII du plateau/IHM
 - Historique complet des coups
 - Annulation des coups (`z`)
 - Abandon (`resign`)
@@ -51,7 +51,7 @@ IA aléatoire jouant un coup légal au hasard.
 IA utilisant :
 - l’algorithme MinMax récursif,
 - une profondeur configurable,
-- une fonction d’évaluation matérielle pour le moment simpliste.
+- une fonction d’évaluation matérielle simpliste.
 
 ---
 # Lancement du programme

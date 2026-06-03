@@ -63,7 +63,7 @@ class Game():
             folder = Path("game")
             folder.mkdir(exist_ok=True)
             for file in folder.iterdir():
-                if file.is_file():
+                if file.is_file() and file.name == "temp.txt":
                     file.unlink()
         else : 
             self.save()

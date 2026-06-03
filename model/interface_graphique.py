@@ -314,7 +314,8 @@ class ChessUI:
                     # ───── Carte charger ─────
                     if has_save and btn_rect.collidepoint(ev.pos):
                         self.game = Game.load_game()
-                        self.IA = self.game.IA
+                        if self.game.type == 'IA' :
+                            self.IA = self.game.IA
 
 
             # ───── fond ─────

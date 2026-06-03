@@ -123,7 +123,7 @@ class Game():
         sauvegarde de la partie dans un fichier txt
         écrasement des autres parties sauvegardées
         """
-        path = "game/save.txt"
+        path = Path("game") / "save.txt"
         s = str(self)
         with open(path, "w", encoding="utf-8") as f:
             f.write(s)

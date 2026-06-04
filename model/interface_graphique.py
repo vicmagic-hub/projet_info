@@ -1,13 +1,14 @@
 import sys
 import pygame
+import random
 from pathlib import Path
 from model.game import Game
 
 # ── Constantes visuelles ─────────────────────────────────────────────────────
-SIZE    = 720           # taille du plateau en pixels
-CASE    = SIZE // 8     #une case
-SIDEBAR = 240
-WIN_W   = SIZE + SIDEBAR
+SIZE    = 720               # taille du plateau en pixels
+CASE    = SIZE // 8         # une case
+SIDEBAR = 240               # taille de l'affichage sidebar
+WIN_W   = SIZE + SIDEBAR    #dimension fenetre
 WIN_H   = SIZE
 
 # L'ensemble des couleurs utilisées
@@ -39,10 +40,13 @@ UNICODE = {
 }
 
 
-# Mémoïsation : on échange de la mémoire contre du temps de calcul
+# Mémoïsation pour les surfaces des pièces : on échange de la mémoire contre du temps de calcul 
 _piece_cache: dict = {}
 
 def piece_surface(piece, size: int) -> pygame.Surface:
+    """
+    Génère ou récupère dans le cache la surface graphique associée à une pièce.
+    """
     key = (piece.marque, piece.color, size)
 
     if key in _piece_cache:
@@ -50,16 +54,6 @@ def piece_surface(piece, size: int) -> pygame.Surface:
 
     font_size = int(size * 0.75)
 
-    #import des polices temporaires à décommenter suivant windows/Mac
-    ############windows
-    #try:
-    #    font = pygame.font.SysFont('segoeuisymbol,symbola,unifont', font_size)
-    #except Exception:
-    #    font = pygame.font.Font(None, font_size)
-    ########## pour Mac :
-    #font = pygame.font.Font("/System/Library/Fonts/Apple Symbols.ttf", font_size)
-
-    # la version en théorie robuste : 
     font = pygame.font.SysFont("segoeuisymbol", font_size)
     if font is None:
         font = pygame.font.SysFont("arial", font_size)
@@ -70,9 +64,10 @@ def piece_surface(piece, size: int) -> pygame.Surface:
     fg   = (255, 255, 255) if piece.color == 'white' else (15, 15, 15) #blanc pour les pièces blanches et quasi noir pour les autres
     surf = pygame.Surface((size, size), pygame.SRCALPHA) #surface transparente de la taille d'une case
 
-    shadow = font.render(ch, True, (0, 0, 0, 200))
-    sr     = shadow.get_rect(center=(size // 2 + 2, size // 2 + 2)) #pour faire l'ombre des pièces
-    surf.blit(shadow, sr)
+    if piece.color == 'white' :
+        shadow = font.render(ch, True, (0, 0, 0, 200))
+        sr     = shadow.get_rect(center=(size // 2 + 2, size // 2 + 2)) #pour faire l'ombre des pièces
+        surf.blit(shadow, sr)
 
     txt = font.render(ch, True, fg)
     tr  = txt.get_rect(center=(size // 2, size // 2))
@@ -82,31 +77,51 @@ def piece_surface(piece, size: int) -> pygame.Surface:
     return surf
 
 
-# Les boutons
 class Bouton:
-    def __init__(self, rect, label): #rect est un tuple (x, y, largeur, hauteur) qui définit la position et la taille du bouton
-        self.rect  = pygame.Rect(rect) #on en fait un objet rectangle
-        self.label = label #le texte affiché
-        self._font = pygame.font.SysFont('georgia,serif', 14) #la police
+    """
+    Bouton graphique cliquable utilisé dans l'interface.
+    """
+    def __init__(self, rect, label): 
+        """
+        Crée un bouton rectangulaire cliquable
+        entrée : rect (position et taille), texte affiché
+        """
+        self.rect  = pygame.Rect(rect)
+        self.label = label
+        self._font = pygame.font.SysFont('georgia,serif', 14)
 
     def draw(self, surf):
-        hov = self.rect.collidepoint(pygame.mouse.get_pos()) #on récupère la position de la souris
-        col = C_BTN_H if hov else C_BTN
-        #on change la couleur du bouton quand la souris passe dessus
-        pygame.draw.rect(surf, col,      self.rect, border_radius=6)
-        pygame.draw.rect(surf, C_BORDER, self.rect, 1, border_radius=6)
+        """
+        affiche le bouton à l'écran
+        entrée : surface de travail
+        """
+        hov = self.rect.collidepoint(pygame.mouse.get_pos()) #position de la souris
+        col = C_BTN_H if hov else C_BTN #survol de la souris ? 
+        pygame.draw.rect(surf, col, self.rect, border_radius=6) #fond
+        pygame.draw.rect(surf, C_BORDER, self.rect, 1, border_radius=6) #bordure
         t = self._font.render(self.label, True, C_TEXT)
-        surf.blit(t, t.get_rect(center=self.rect.center))
+        surf.blit(t, t.get_rect(center=self.rect.center))#texte
 
     def clicked(self, ev):
-        return (ev.type == pygame.MOUSEBUTTONDOWN
-                and ev.button == 1
-                and self.rect.collidepoint(ev.pos))
-#Renvoie True si trois conditions sont réunies simultanément : un événement clic souris a eu lieu, c'est le bouton gauche (button == 1), et le clic est à l'intérieur du rectangle.
+        """
+        vérifie si un bouton est cliqué
+        entrée : événement à traiter
+        renvoie un booléen
+        """
+        return (ev.type == pygame.MOUSEBUTTONDOWN # clic
+                and ev.button == 1 #clic gauche
+                and self.rect.collidepoint(ev.pos)) # sur le bouton
 
 
 class TextInput:
+    """
+    Champ de saisie textuelle simple.
+    """
     def __init__(self, rect, placeholder=""):
+        """
+        Crée un champ de saisie
+        entree : rect (position et taille), texte d'indication
+        """
         self.rect = pygame.Rect(rect)
         self.text = ""
         self.placeholder = placeholder
@@ -114,6 +129,10 @@ class TextInput:
         self.font = pygame.font.SysFont("georgia", 18)
 
     def handle_event(self, ev):
+        """
+        recoit le texte si activé
+        entrée : événement à traiter
+        """
         if ev.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(ev.pos)
 
@@ -127,6 +146,10 @@ class TextInput:
                     self.text += ev.unicode
 
     def draw(self, screen):
+        """
+        affiche le champ à l'écran
+        entrée : surface de travail
+        """
         color = (120, 200, 120) if self.active else (90, 90, 90)
         pygame.draw.rect(screen, color, self.rect, 2)
 
@@ -134,27 +157,37 @@ class TextInput:
         surf = self.font.render(display, True, (220, 220, 220))
         screen.blit(surf, (self.rect.x + 8, self.rect.y + 6))
 
+
 class PromoDialog:
-    """Demande au joueur quelle pièce choisir lors d'une promotion."""
+    """
+    Fenêtre de sélection de pièce lors d'une promotion de pion.
+    """
     PROMO_PIECES = ['Q', 'R', 'B', 'N']
     PROMO_LABELS = {'Q': '♕/♛', 'R': '♖/♜', 'B': '♗/♝', 'N': '♘/♞'}
     W, H = 320, 90 #Dimension de la boîte
 
     def __init__(self, screen_size):
+        """
+        Crée la boîte de dialogue de promotion centrée sur la fenêtre
+        entree : taille de la fenêtre
+        """
         sw, sh = screen_size
         self.rect = pygame.Rect((sw - self.W) // 2, (sh - self.H) // 2, self.W, self.H)
-        #On centre la fenêtre au milieu de l'écran
+
         self._font = pygame.font.SysFont('georgia,serif', 15, bold=True)
         self._big = pygame.font.SysFont("segoeuisymbol", 32)
         bw = self.W // 4
-        #création des 4 boutons côte à côte :
+        
         self.btns = {
             p: pygame.Rect(self.rect.x + i * bw, self.rect.y + 32, bw, self.H - 32)
             for i, p in enumerate(self.PROMO_PIECES)
         }
 
-#Fonction de l'enfer : dessine ma boite (fond/bord/titre/les 4 boutons)
     def draw(self, surf):
+        """
+        affiche le champ à l'écran
+        entrée : surface de travail
+        """
         pygame.draw.rect(surf, C_SIDEBAR, self.rect, border_radius=8)
         pygame.draw.rect(surf, C_BORDER,  self.rect, 2, border_radius=8)
         t = self._font.render('Choisissez la pièce de promotion', True, C_TEXT)
@@ -166,8 +199,12 @@ class PromoDialog:
             t2 = self._big.render(self.PROMO_LABELS[p], True, C_TEXT)
             surf.blit(t2, t2.get_rect(center=r.center))
 
-#Vérifie si le joueur a cliqué sur un des 4 boutons. Renvoie la lettre correspondante ('Q', 'R', 'B' ou 'N') ou None si le clic est ailleurs.
     def clicked(self, ev):
+        """
+        traitement des clics à la promotion
+        entrée : événement à traiter
+        Renvoie la pièce choisie lors d'un clic utilisateur.
+        """
         if ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
             for p, r in self.btns.items():
                 if r.collidepoint(ev.pos):
@@ -175,14 +212,17 @@ class PromoDialog:
         return None
 
 
-#Ca c'est l'IHM
 class ChessUI:
     """
-    Interface graphique.
-    Utilise Board, les classes Piece et Move.
+    Interface graphique principale du jeu
+    gère l'affichage et les entrée utilisateur
+    organise la boucle de jeu
     """
-    #Création de fenêtre+horloge gérant les 60 images/s et charge police/boutons/couleurs etc
     def __init__(self):
+        """
+        Création de l'interface
+        demande de la partie à l'utilisateur et initialisation globale
+        """
         self.selected = None
         self.legal = []
         self.flipped  = False
@@ -203,46 +243,45 @@ class ChessUI:
         SX = SIZE + 10
         self.btn_new    = Bouton((SX, WIN_H - 88, SIDEBAR - 20, 34), 'Nouvelle partie')
         self.btn_flip   = Bouton((SX, WIN_H - 48, SIDEBAR - 20, 34), 'Retourner le plateau')
-        self.btn_undo   = Bouton((SX, WIN_H - 130, SIDEBAR - 20, 34), 'Annuler (z)')
+        self.btn_res   = Bouton((SX, WIN_H - 130, SIDEBAR - 20, 34), 'Abandonner')
 
-        # overlays (surfaces SRCALPHA réutilisables)
+        # overlays
         self._ov_sel   = self._flat(C_SEL)
         self._ov_last  = self._flat(C_LAST)
         self._ov_check = self._flat(C_CHECK_H)
         self._ov_dot   = self._dot()
 
         self._promo_dialog: PromoDialog | None = None
-        self._pending_promo_moves: list = []   # coups de même arrivée, type promo*
+        self._pending_promo_moves: list = []
 
         self.show_menu()
 
         self.run()
 
-
     def _draw_card(self, x, y, w, h, title):
-        pygame.draw.rect(
-            self.screen,
-            C_SIDEBAR,
-            (x, y, w, h),
-            border_radius=12
-        )
-
-        pygame.draw.rect(
-            self.screen,
-            C_BORDER,
-            (x, y, w, h),
-            2,
-            border_radius=12
-        )
+        """
+        Dessine une carte pour le menu principal.
+        entree : position, dimensions, titre
+        """
+        pygame.draw.rect(self.screen,C_SIDEBAR,(x, y, w, h),border_radius=12)
+        pygame.draw.rect(self.screen,C_BORDER,(x, y, w, h),2,border_radius=12)
 
         font = pygame.font.SysFont("georgia", 20, bold=True)
         t = font.render(title, True, C_TEXT)
         self.screen.blit(t, (x + 20, y + 15))
 
+    def draw_select(self, rect):
+        """
+        Entoure un cercle sélectionné
+        """
+        pygame.draw.circle(self.screen, C_BTN_ACT, rect.center, 11, 2)
+
     def show_menu(self):
+        """
+        Affiche le menu principal et crée ou charge une partie.
+        """
         save_path = Path("game/save.txt")
         has_save = save_path.exists()
-        
         self.game = None
 
         pygame.init()
@@ -255,23 +294,27 @@ class ChessUI:
         CARD_H = 170
         CENTER_X = (WIN_W - CARD_W) // 2
 
-        # inputs IA
+        # Création des boutons/champs de saisie IA
         ia_name = TextInput((CENTER_X + 180, 170, 260, 34), "Pseudo")
         self.ia_level = 1
+        self.ia_color_choice = "random"
         btn_minus = Bouton((CENTER_X + 180, 215, 40, 30), "-")
         btn_plus  = Bouton((CENTER_X + 420, 215, 40, 30), "+")
         btn_ai_play = Bouton((CENTER_X + 180, 250, 220, 34), "Jouer IA")
+        color_y, color_x = 258, CENTER_X + 20
+        r_white = pygame.Rect(color_x , color_y, 20, 20)
+        r_black = pygame.Rect(color_x + 40, color_y, 20, 20)
+        r_rand  = pygame.Rect(color_x + 80, color_y, 20, 20)
 
-        # inputs PvP
+        # Création des boutons/champs de saisie PvP
         p1 = TextInput((CENTER_X + 180, 420, 260, 34), "Blanc")
         p2 = TextInput((CENTER_X + 180, 465, 260, 34), "Noir")
         btn_local_play = Bouton((CENTER_X + 180, 500, 220, 34), "Jouer local")
 
-        #load
+        #Création du bouton Charger
         btn_rect = None
 
         clock = pygame.time.Clock()
-
         while self.game is None:
             for ev in pygame.event.get():
                 if ev.type == pygame.QUIT:
@@ -281,190 +324,224 @@ class ChessUI:
                 ia_name.handle_event(ev)
                 p1.handle_event(ev)
                 p2.handle_event(ev)
-
                 if btn_minus.clicked(ev):
                     self.ia_level = max(1, self.ia_level - 1)
-
                 if btn_plus.clicked(ev):
                     self.ia_level = min(2, self.ia_level + 1)
 
                 if ev.type == pygame.MOUSEBUTTONDOWN:
-
-                    # ───── Carte IA ─────
+                    # Carte IA
+                    ##choix couleur IA
+                    if r_white.collidepoint(ev.pos):
+                        self.ia_color_choice = "white"
+                    elif r_black.collidepoint(ev.pos):
+                        self.ia_color_choice = "black"
+                    elif r_rand.collidepoint(ev.pos):
+                        self.ia_color_choice = "random"
+                    ##lancement
                     if btn_ai_play.clicked(ev):
-                        self.game = Game(
-                            ia_name.text or "Joueur",
-                            "white",
-                            self.ia_level,
-                            "IA",
-                            None
-                        )
+                        if self.ia_color_choice == "random":
+                            self.ia_color_choice = random.choice(["white", "black"])
+                        self.game = Game(ia_name.text or "Joueur",self.ia_color_choice,self.ia_level,"IA",None)
                         self.IA = self.game.IA
-
-                    # ───── Carte PvP ─────
+                    # Carte Pvp local
                     if btn_local_play.clicked(ev):
-                        self.game = Game(
-                            p1.text or "Blanc",
-                            "white",
-                            0,
-                            "local",
-                            p2.text or "Noir"
-                        )
-
-                    # ───── Carte charger ─────
+                        self.game = Game(p1.text or "Blanc","white",0,"local",p2.text or "Noir")
+                    # Carte Charger
                     if has_save and btn_rect.collidepoint(ev.pos):
                         self.game = Game.load_game()
                         if self.game.type == 'IA' :
                             self.IA = self.game.IA
 
-
-            # ───── fond ─────
+            # Fond
             self.screen.fill(C_BG)
 
-            # ───── titre ─────
+            # Titre
             title = title_font.render("♟ Chess", True, C_TEXT)
             self.screen.blit(title, title.get_rect(center=(WIN_W//2, 60)))
 
             subtitle = sub_font.render("Nouvelle partie", True, C_TEXT_DIM)
             self.screen.blit(subtitle, subtitle.get_rect(center=(WIN_W//2, 95)))
 
-            # ───── CARTE IA ─────
+            # Carte IA
             self._draw_card(CENTER_X, 120, CARD_W, CARD_H, "Jouer contre l'IA")
-
+            font_small = pygame.font.SysFont("georgia", 16)
+            self.screen.blit(font_small.render("Jouer avec :", True, C_TEXT),(color_x, color_y-25))
             ia_label = sub_font.render(f"Niveau IA : {self.ia_level}", True, C_TEXT)
             self.screen.blit(ia_label, (CENTER_X + 30, 160))
-
             ia_name.draw(self.screen)
             btn_minus.draw(self.screen)
             btn_plus.draw(self.screen)
-
-            # bouton lancer IA
             pygame.draw.rect(self.screen, C_BTN_ACT, (CENTER_X + 180, 250, 220, 34), border_radius=6)
-            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),
-                            (CENTER_X + 260, 257))
+            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),(CENTER_X + 260, 257))
+            pygame.draw.circle(self.screen, (240, 240, 240), r_white.center, 8)
+            pygame.draw.circle(self.screen, C_BORDER, r_white.center, 8, 1)
+            pygame.draw.circle(self.screen, (30, 30, 30), r_black.center, 8)
+            pygame.draw.circle(self.screen, C_BORDER, r_black.center, 8, 1)
+            pygame.draw.circle(self.screen, (200, 200, 200), r_rand.center, 8)
+            pygame.draw.circle(self.screen, C_BORDER, r_rand.center, 8, 1)
+            q = font_small.render("?", True, (30, 30, 30))
+            self.screen.blit(q, q.get_rect(center=r_rand.center))
+            if self.ia_color_choice == "white":
+                self.draw_select(r_white)
+            elif self.ia_color_choice == "black":
+                self.draw_select(r_black)
+            else:
+                self.draw_select(r_rand)
 
-            # ───── CARTE PvP ─────
+            # Carte Pvp
             self._draw_card(CENTER_X, 360, CARD_W, CARD_H, "Partie locale")
-
             p1.draw(self.screen)
             p2.draw(self.screen)
-
             pygame.draw.rect(self.screen, C_BTN_ACT, (CENTER_X + 180, 500, 220, 34), border_radius=6)
-            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),
-                            (CENTER_X + 260, 507))
+            self.screen.blit(sub_font.render("Jouer", True, C_TEXT),(CENTER_X + 260, 507))
 
-            # ───── CARTE charger ─────
+            # Carte Charger
             self._draw_card(CENTER_X, 600, CARD_W, CARD_H, "Reprendre partie")
-
             if has_save:
                 btn_rect = pygame.Rect(CENTER_X + 180, 650, 220, 34)
-
                 pygame.draw.rect(self.screen, C_BTN_ACT, btn_rect, border_radius=6)
-                self.screen.blit(
-                    sub_font.render("Reprendre", True, C_TEXT),
-                    (CENTER_X + 250, 657)
-                )
+                self.screen.blit(sub_font.render("Reprendre", True, C_TEXT),(CENTER_X + 250, 657))
             else:
                 btn_rect = pygame.Rect(CENTER_X + 180, 650, 220, 34)
-
                 pygame.draw.rect(self.screen, C_BTN, btn_rect, border_radius=6)
-                self.screen.blit(
-                    sub_font.render("Aucune sauvegarde", True, C_TEXT_DIM),
-                    (CENTER_X + 210, 657)
-                )
+                self.screen.blit(sub_font.render("Aucune sauvegarde", True, C_TEXT_DIM),(CENTER_X + 210, 657))
 
             pygame.display.flip()
             clock.tick(60)
 
-
     def _flat(self, rgba):
+        """
+        Crée une surface unie utilisée comme overlay.
+        entrée : couleur
+        renvoie la surface
+        """
         s = pygame.Surface((CASE, CASE), pygame.SRCALPHA)
         s.fill(rgba)
         return s
 
     def _dot(self):
+        """
+        Crée l'indicateur graphique des coups légaux
+        """
         s = pygame.Surface((CASE, CASE), pygame.SRCALPHA)
         pygame.draw.circle(s, C_DOT, (CASE // 2, CASE // 2), CASE // 7)
         return s
 
-    # état de jeu
     def reset(self):
-        self.selected = None         # case (i,j) sélectionnée
+        """
+        Réinitialise l'interface, demande une nouvelle partie et la lance
+        """
+        self.selected = None
         self.legal = []
         self.flipped  = False
         self._promo_dialog = None
         self._pending_promo_moves = []
+        self.history_scroll = 0
 
-    # ── coordonnées ──────────────────────────────────────────────────────────
+        self.show_menu()
+
+        self.run()
+
     def to_screen(self, i, j):
-        """(ligne, colonne) plateau → (x, y) pixel (coin haut-gauche de la case)."""
-        if self.flipped: #soucis d'affichage : inversion gauche droite mais pas haut bas
-            return (7 - j) * CASE, (7 - i) * CASE
+        """
+        Convertit une case du plateau en coordonnées écran
+        entrée : indices de la case
+        renvoie les coordonées x,y
+        """
+        if self.flipped:
+            return (7 - j) * CASE, i * CASE
         return j * CASE, (7 - i) * CASE
 
     def from_screen(self, x, y):
-        """Pixel → (ligne, colonne) plateau, ou None si hors plateau."""
+        """
+        Convertit des coordonnées écran en une case du plateau
+        entrée : coordonnées x y
+        renvoie les indices i j 
+        """
         if x >= SIZE or x < 0 or y < 0 or y >= WIN_H:
             return None
         c = x // CASE
         r = y // CASE
         if self.flipped:
-            return 7 - r, 7 - c
+            return r, 7 - c
         return 7 - r, c
 
-
-    # gestion clic plateau
     def _board_click(self, i, j):
-        """Traite un clic sur la case (i,j) du plateau."""
-
-        # dialogue promo ouvert
+        """
+        Traite un clic sur une case du plateau
+        entrée : indices de la case
+        """
         if self._promo_dialog:
-            return   # géré dans handle_event
-
+            return None  #attente d'une réponse de la promotion avant de passer à la suite
         piece = self.game.board.squares[i][j]
 
-        # une pièce déjà sélectionnée
+        #a. une pièce déjà sélectionnée
         if self.selected:
             fi, fj = self.selected
-            # cherche un coup légal qui arrive en (i,j)
+            # a.1 on lui trouve un coup à éxécuter
             moves = [m for m in self.legal if m.arrivee == (i, j)]
-
             if moves:
                 promo_types = {'promotion', 'promoprise'}
                 promo_moves = [m for m in moves if m.type in promo_types]
-
                 if promo_moves:
-                    # plusieurs choix de pièce → ouvre le dialogue
                     self._pending_promo_moves = promo_moves
                     self._promo_dialog = PromoDialog(self.screen.get_size())
                 else:
                     self.chosen_move = moves[0]
-
                 self.selected = None
                 self.legal = []
-                return
-
-            # clique sur une autre pièce alliée → change la sélection
+                return None
+            #a.2 On change de pièce sélectionnée
             if piece and piece.color == self.game.board.trait:
                 self.selected = (i, j)
                 self.legal = piece.possible_moves()
-                return
-
-            # clique ailleurs → désélectionne
+                return None
+            #a.3 On déselectionne la pièce
             self.selected = None
             self.legal = []
-            return
+            return None
 
-        #Pas encore de sélection
+        #b. Pas encore de pièce sélectionnée, on en sélectionne une et on sauvegarde les coups possibles pour elle
         if piece and piece.color == self.game.board.trait:
             self.selected = (i, j)
             self.legal = piece.possible_moves()
 
-    # gestion événements
     def handle_event(self, ev):
-        #si fin de partie, ne pas traiter
+        """
+        Traite les évenements
+        entrée : évenement à traiter
+        """
+        #####Evenements traités même si la partie est finie
+        
+        # scroll vers le haut = voir les coups anciens
+        if ev.type == pygame.MOUSEWHEEL:
+            
+            self.history_scroll -= ev.y
+            self.history_scroll = max(0, self.history_scroll)
+
+        #nouvelle partie
+        if self.btn_new.clicked(ev):
+            self.reset()
+            return None
+        
+        #retourner le plateau
+        if self.btn_flip.clicked(ev):
+            self.flipped = not self.flipped
+            return None
+        
+        #si fin de partie, ne pas traiter le reste
         if self.game.board.end:
-            return
+            return None
+        
+        #####Evenements traités seulement si la partie est en cours
+        
+        #Ctrl Z : annulation
+        if ev.type == pygame.KEYDOWN:
+            if ev.key == pygame.K_z and (ev.mod & (pygame.KMOD_CTRL | pygame.KMOD_META)):
+                self.game.undo()
+                return None
+
         # dialogue promotion
         if self._promo_dialog:
             choice = self._promo_dialog.clicked(ev)
@@ -474,30 +551,33 @@ class ChessUI:
                 self._promo_dialog        = None
                 self._pending_promo_moves = []
                 self.chosen_move = m
-            return
+            return None
 
-        if self.btn_new.clicked(ev):
-            #self.reset(); return
-            pass #à définir : réinitialiser la partie
-        if self.btn_flip.clicked(ev):
-            self.flipped = not self.flipped; return
-        if self.btn_undo.clicked(ev):
-            self.game.undo(); return
+        #abandon
+        if self.btn_res.clicked(ev):
+            self.game.board.end = True
+            if self.game.board.trait == 'white' : self.game.white_score = 0
+            else : self.game.white_score = 1
+            #suppression de la sauvegarde 
+            folder = Path("game")
+            folder.mkdir(exist_ok=True)
+            for file in folder.iterdir():
+                if file.is_file():
+                    file.unlink()
+            return None
 
+        #clic 
         if (ev.type == pygame.MOUSEBUTTONDOWN
                 and ev.button == 1
                 and not self.game.board.end):
             pos = self.from_screen(*ev.pos)
             if pos:
                 self._board_click(*pos)
-        
-        if ev.type == pygame.MOUSEWHEEL:
-            # scroll vers le haut = voir les coups anciens
-            self.history_scroll -= ev.y
-            self.history_scroll = max(0, self.history_scroll)
 
-    # rendu
     def draw(self):
+        """
+        Dessine l'interface complet
+        """
         self.screen.fill(C_BG)
         self._draw_board()
         self._draw_sidebar()
@@ -506,14 +586,18 @@ class ChessUI:
         pygame.display.flip()
 
     def _draw_board(self):
+        """
+        Dessine le plateau, les pièces et les indicateurs visuels.
+        """
         board = self.game.board
         trait = board.trait
         last_move = self.game.moves[-1] if self.game.moves else None
+
         # cases
         for i in range(8):
             for j in range(8):
                 x, y   = self.to_screen(i, j)
-                color  = C_LIGHT if (i + j) % 2 == 0 else C_DARK
+                color  = C_LIGHT if (i + j) % 2 == 1 else C_DARK
                 pygame.draw.rect(self.screen, color, (x, y, CASE, CASE))
 
         # dernier coup joué
@@ -549,31 +633,33 @@ class ChessUI:
 
         # coordonnées
         for i in range(8):
-            fi, fj = (i, 7 - i) if self.flipped else (i, i)
-            # lettres colonnes (bas)
-            col_ch = chr(ord('a') + fj)
-            bg = C_DARK if (0 + fj) % 2 == 0 else C_LIGHT
-            t  = self.fn_sm.render(col_ch, True, bg)
-            self.screen.blit(t, (fj * CASE + CASE - 12, WIN_H - 14))
-            # chiffres lignes (gauche)
-            row_ch = str(fi + 1) if not self.flipped else str(8 - fi)
-            bg2 = C_LIGHT if (fi + 0) % 2 == 0 else C_DARK
-            t2  = self.fn_sm.render(str(i + 1), True, bg2)
-            self.screen.blit(t2, (3, (7 - i) * CASE + 3))
+            if self.flipped:
+                col_ch = chr(ord('a') + (7 - i))
+                row_ch = str(i + 1)
+            else:
+                col_ch = chr(ord('a') + i)
+                row_ch = str(8 - i)
+            # lettres
+            t = self.fn_sm.render(col_ch, True, C_TEXT)
+            self.screen.blit(t, (i * CASE + CASE - 12, WIN_H - 14))
+            # chiffres
+            t = self.fn_sm.render(row_ch, True, C_TEXT)
+            self.screen.blit(t, (3, i * CASE + 3))
 
     def _draw_sidebar(self):
+        """
+        Dessine la barre latérale contenant les informations de partie
+        """
         sx = SIZE
         self.screen.fill(C_SIDEBAR, (sx, 0, SIDEBAR, WIN_H))
         pygame.draw.line(self.screen, C_BORDER, (sx, 0), (sx, WIN_H), 2)
-
         HEADER_H = 90
         BTN_H = 140
         PAD = 10
 
-        # ── HEADER ─────────────────────────────
+        #en-tête
         title = self.fn_lg.render('♟ Chess', True, C_TEXT)
         self.screen.blit(title, (sx + PAD, PAD))
-
         players = f"{self.game.player_1} vs {self.game.opponent}"
         t_players = self.fn_md.render(players, True, C_TEXT_DIM)
         self.screen.blit(t_players, (sx + PAD, 40))
@@ -587,34 +673,27 @@ class ChessUI:
         else : 
             t2 = self.fn_md.render(f"Partie terminée : ({self.game.white_score}, {str(1 - int(self.game.white_score))})", True, C_TEXT_DIM)
             self.screen.blit(t2, (sx + PAD, 65))
-
         pygame.draw.line(self.screen, C_BORDER,
                         (sx + 10, HEADER_H),
                         (sx + SIDEBAR - 10, HEADER_H), 1)
 
-        # ── HISTORIQUE (zone dédiée) ─────────────────────────────
+        # Historique
         hist_top = HEADER_H + PAD
         hist_bottom = WIN_H - BTN_H
         line_h = 16
-
         self.screen.blit(self.fn_md.render("Historique", True, C_TEXT_DIM),
                         (sx + PAD, hist_top))
-
         log = self.game.moves
-
         rows = (hist_bottom - hist_top) // line_h
         max_start = max(0, len(log) - rows * 2)
 
         # scroll en nombre de demi-coups
         start = self.history_scroll * 2
         start = min(start, max_start)
-
         visible = log[start:start + rows * 2]
-
         y = hist_top + 25
         i = 0
         num = start // 2 + 1
-
         while i < len(visible):
             w = str(visible[i]).strip()
             b = str(visible[i + 1]).strip() if i + 1 < len(visible) else ""
@@ -628,19 +707,23 @@ class ChessUI:
             i += 2
             num += 1
 
-        # ── BOUTONS (zone fixe en bas) ─────────────────────────────
+        # boutons
         btn_y = WIN_H - BTN_H + 10
-
-        self.btn_undo.rect.y = btn_y
+        self.btn_res.rect.y = btn_y
         self.btn_new.rect.y = btn_y + 40
         self.btn_flip.rect.y = btn_y + 80
-
-        self.btn_undo.draw(self.screen)
+        self.btn_res.draw(self.screen)
         self.btn_new.draw(self.screen)
         self.btn_flip.draw(self.screen)
 
-    # boucle principale
     def run(self):
+        """
+        Boucle principale de l'application
+        traite les évenements, met à jour la partie et redessine l'interface
+        si tour de l'IA, lui demande aussi son coup
+        """
+        if self.game.type == 'IA' and self.ia_color_choice == 'black' :
+            self.flipped = True
         while True:
             for ev in pygame.event.get():
                 if ev.type == pygame.QUIT:
@@ -653,6 +736,7 @@ class ChessUI:
             if hasattr(self, 'chosen_move') and self.chosen_move:
                 self.game.play(self.chosen_move)
                 self.chosen_move = None
-
+                if self.game.type == 'local' : 
+                    self.flipped = not self.flipped
             self.draw()
             self.clock.tick(60)

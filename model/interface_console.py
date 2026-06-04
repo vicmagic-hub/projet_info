@@ -1,7 +1,15 @@
 from model.game import Game
 
 class ConsoleInterface():
+    """
+    classe pour gérer l'interface console du jeu
+    """
     def __init__(self):
+        """
+        initialisation de l'interface console : 
+        sélection du type de partie et des paramètres via un menu à input
+        Présentation de la partie et lancement
+        """
         valid = False
         while not valid :
             type =  input ("choisissez une partie en JcJ sur ce PC (local) ou contre IA (IA) ")
@@ -35,6 +43,9 @@ class ConsoleInterface():
         self.run()
     
     def run(self) : 
+        """
+        Gestion de l'alternance des tours et affichage en fin de partie
+        """
         #lancement des tours, jusqu'à ce que la partie prenne fin
         while not self.game.board.end :
             if self.game.type == 'local' : 
@@ -52,6 +63,10 @@ class ConsoleInterface():
         print(self.game.board)
     
     def get_human_move(self) : 
+        """
+        Système d'input pour demander les coups à un joueur humain, en proposant les coups disponibles par pièce sélectionnée
+        Renvoie un coup valide
+        """
         print(self.game.board)
         print(f"{self.game.board.trait}'s turn to play")
         valid = False
@@ -100,4 +115,8 @@ class ConsoleInterface():
         return m
     
     def get_AI_move(self) : 
+        """
+        Demande des coups à une IA
+        Renvoie un coup valide
+        """
         return self.IA.select_move(self.game.board) 

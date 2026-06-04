@@ -36,8 +36,7 @@ class Game():
             elif self.level == 2 : 
                 self.IA = MinmaxAI(3)
             self.opponent = self.IA.name                
-        self.white_score = None
-    
+        self.white_score = None    
     
     def play(self, m):
         """
@@ -63,12 +62,11 @@ class Game():
             folder = Path("game")
             folder.mkdir(exist_ok=True)
             for file in folder.iterdir():
-                if file.is_file() and file.name == "temp.txt":
+                if file.is_file():
                     file.unlink()
         else : 
             self.save()
     
-
     def undo(self):
         """
         Méthode pour faire un Ctrl Z : annulation du dernier coup de l'adversaire, et du dernier coup du joueur
@@ -81,7 +79,6 @@ class Game():
                 #suppression du coup du joueur
                 m = self.moves.pop()
                 self.board.unapply_move(m)
-
 
     def __str__(self):
         """
@@ -117,13 +114,17 @@ class Game():
             s+= "(" + str(self.white_score) + " - " + str(1- self.white_score) + ")"
         return s
 
-
     def save(self):
         """
         sauvegarde de la partie dans un fichier txt
         écrasement des autres parties sauvegardées
         """
-        path = Path("game") / "save.txt"
+        game_path = Path("game")
+        has_game = game_path.exists()
+        if not has_game : 
+            Path("game").mkdir()
+            game_path = Path("game")
+        path = game_path / "save.txt"
         s = str(self)
         with open(path, "w", encoding="utf-8") as f:
             f.write(s)

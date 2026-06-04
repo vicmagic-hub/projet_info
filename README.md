@@ -15,11 +15,12 @@ Moteur d’échecs orienté objet développé sous Python, intégrant :
 
 Ce projet informatique est un moteur d’échecs entièrement codé sous Python dans une approche orientée objet.
 Le moteur fonctionne pour l'instant intégralement dans le terminal.
-Version de python recommandée : 3.12+ / Devrait fonctionner pour 3.10+
+Version de python recommandée : 3.12 / Devrait fonctionner pour 3.10+ / Pas au-delà de 3.12 (compatibilité pygame)
 Les seules bibliothèques utilisées sont : 
 - random
 - abc
 - datetime
+- pygame (2.6.1)
 ---
 
 # Fonctionnalités
@@ -27,10 +28,8 @@ Les seules bibliothèques utilisées sont :
 ## Jeu
 - Partie locale joueur contre joueur
 - Partie contre IA
-- Affichage ASCII du plateau/IHM
-- Historique complet des coups
-- Annulation des coups (`z`)
-- Abandon (`resign`)
+- Affichage ASCII du plateau / IHM
+- Sauvegarde et chargement de parties non terminées
 
 ## Règles des échecs
 - Déplacements légaux
@@ -76,7 +75,10 @@ projet_info/
 │   ├── board.py
 │   ├── game.py
 │   ├── piece.py
-│   └── coup_encodeur.py
+    ├── coup_encodeur.py
+    ├── interface_console.py
+    ├── interface_graphique.py
+│   └── 
 │
 ├── tests/
 │

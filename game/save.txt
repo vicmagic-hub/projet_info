@@ -1,0 +1,6 @@
+[Date "2026-06-04"]
+[White "IAmoyendsefaireavoir"]
+[Black "Joueur"]
+[Side "black"]
+[Type "IA"]
+0  : Nb1->c3   

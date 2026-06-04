@@ -159,7 +159,7 @@ class Board:
                 self.squares[i][0] = tour
                 self.squares[i][3] = None
         #retour des états du board
-        self.trait = m.piece.color    
+        self.trait = m.piece.color   
         self.last_move = m.prev_last_move
         self.white_king = m.prev_white_king
         self.black_king = m.prev_black_king
@@ -179,13 +179,9 @@ class Board:
             if self.trait =='white' and self.is_attacked_by(self.white_king, 'black') :
                 m.is_a_mat = True
                 m.is_a_check = True
-                return self.trait
             elif self.trait =='black' and self.is_attacked_by(self.black_king, 'white') :
                 m.is_a_mat = True
                 m.is_a_check = True
-                return self.trait
-            else :
-                return self.trait
         #si un coup est disponible, marquage de l'échec éventuel, enregistrement et passage au joueur suivant
         elif self.trait == 'white':
             if self.is_attacked_by(self.white_king, 'black') :

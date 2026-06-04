@@ -170,7 +170,6 @@ class Game():
             opponent = white
         level = 0
         if type == 'IA' :
-            print('opponent : ' + opponent)
             if opponent == "IAdifficilementpire" :
                 level = 1
             elif opponent == "IAmoyendsefaireavoir" :

@@ -18,6 +18,7 @@ Le moteur fonctionne pour l'instant intégralement dans le terminal.
 Version de python recommandée : 3.12 / Devrait fonctionner pour 3.10+ / Pas au-delà de 3.12 (compatibilité pygame)
 Les seules bibliothèques utilisées sont : 
 - random
+- unitest
 - abc
 - datetime
 - pygame (2.6.1)

@@ -28,7 +28,7 @@ Les seules bibliothèques utilisées sont :
 ## Jeu
 - Partie locale joueur contre joueur
 - Partie contre IA
-- Affichage ASCII du plateau / IHM
+- Affichage ASCII du plateau ou IHM
 - Sauvegarde et chargement de parties non terminées
 
 ## Règles des échecs
@@ -56,6 +56,7 @@ IA utilisant :
 # Lancement du programme
 
 Pour lancer une partie, il suffit d'éxécuter main.py et de se laisser guider
+Pour passer en mode dégradé, lancer la version console
 
 ---
 
@@ -70,19 +71,22 @@ projet_info/
 │   └── ai_lab.py
 │
 ├── game/
+│   └── save.txt (eventuelle partie en cours sauvegardée)
 │
 ├── model/
 │   ├── board.py
 │   ├── game.py
 │   ├── piece.py
-    ├── coup_encodeur.py
-    ├── interface_console.py
-    ├── interface_graphique.py
-│   └── 
+│   └── coup_encodeur.py
+│
+├── ui/
+│   ├── interface_console.py
+│   └── interface_graphique.py
 │
 ├── tests/
+│   └── test_chess.py
 │
 └── README.md
-... et autres
+... et autres fichiers plus ou moins utile (compatibilté OS, ...)
 ---
 

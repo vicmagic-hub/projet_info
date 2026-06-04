@@ -39,6 +39,13 @@ UNICODE = {
     ('white', 'K'): '♔', ('black', 'K'): '♚',
 }
 
+FONT_PATH = Path("asset/DejaVuSans.ttf")
+
+def get_symbol_font(size):
+    try:
+        return pygame.font.Font(str(FONT_PATH), size)
+    except:
+        return pygame.font.SysFont(None, size)
 
 # Mémoïsation pour les surfaces des pièces : on échange de la mémoire contre du temps de calcul 
 _piece_cache: dict = {}
@@ -54,11 +61,7 @@ def piece_surface(piece, size: int) -> pygame.Surface:
 
     font_size = int(size * 0.75)
 
-    font = pygame.font.SysFont("segoeuisymbol", font_size)
-    if font is None:
-        font = pygame.font.SysFont("arial", font_size)
-    if font is None:
-        font = pygame.font.Font(None, font_size)
+    font = get_symbol_font(font_size)
 
     ch   = UNICODE.get((piece.color, piece.marque), '?') #récupère le bon symbole dans le dic
     fg   = (255, 255, 255) if piece.color == 'white' else (15, 15, 15) #blanc pour les pièces blanches et quasi noir pour les autres
@@ -175,7 +178,7 @@ class PromoDialog:
         self.rect = pygame.Rect((sw - self.W) // 2, (sh - self.H) // 2, self.W, self.H)
 
         self._font = pygame.font.SysFont('georgia,serif', 15, bold=True)
-        self._big = pygame.font.SysFont("segoeuisymbol", 32)
+        self._big = get_symbol_font(32)
         bw = self.W // 4
         
         self.btns = {
@@ -357,6 +360,7 @@ class ChessUI:
             self.screen.fill(C_BG)
 
             # Titre
+            title_font = get_symbol_font(44)
             title = title_font.render("♟ Chess", True, C_TEXT)
             self.screen.blit(title, title.get_rect(center=(WIN_W//2, 60)))
 
@@ -658,7 +662,8 @@ class ChessUI:
         PAD = 10
 
         #en-tête
-        title = self.fn_lg.render('♟ Chess', True, C_TEXT)
+        title_font = get_symbol_font(32)
+        title = title_font.render("♟ Chess", True, C_TEXT)
         self.screen.blit(title, (sx + PAD, PAD))
         players = f"{self.game.player_1} vs {self.game.opponent}"
         t_players = self.fn_md.render(players, True, C_TEXT_DIM)

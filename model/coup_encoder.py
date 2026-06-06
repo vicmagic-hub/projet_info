@@ -36,19 +36,8 @@ class Move():
         n = len (s)
         captured_piece = None
         promotion_piece = None
-        if s[:3] == "O-O" : 
-            #petit roque
-            if color == 'white' : 
-                piece = board.squares[0][4]
-                depart = (0,4)
-                arrivee = (0,6)
-            else :
-                piece = board.squares[7][4]
-                depart = (7,4)
-                arrivee = (7,6)
-            type = 'castle'
-            n_parcouru = 2
-        elif s[:5] =="O-O-O" :
+        if s[:5] =="O-O-O" :
+            print("gdr")
             #grand roque
             if color == 'white' : 
                 piece = board.squares[0][4]
@@ -60,6 +49,19 @@ class Move():
                 arrivee = (7,2)
             type = 'castle'
             n_parcouru = 4
+        elif s[:3] == "O-O" : 
+            print("petitroque")
+            #petit roque
+            if color == 'white' : 
+                piece = board.squares[0][4]
+                depart = (0,4)
+                arrivee = (0,6)
+            else :
+                piece = board.squares[7][4]
+                depart = (7,4)
+                arrivee = (7,6)
+            type = 'castle'
+            n_parcouru = 2
         else : 
             if s[0].isupper() : 
                 #coup de pièce

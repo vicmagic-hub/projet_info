@@ -6,5 +6,5 @@ if __name__ == "__main__" :
     ChessUI()
 
 #lancement en console (mode dégardé)
-if __name__ == "__remplacer par main au besoin":
+if __name__ == "__remplacer par main au besoin__":
     ConsoleInterface()

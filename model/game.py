@@ -19,7 +19,6 @@ class Game():
         création d'un historique des coups, d'un plateau, du score des blancs
         initialisation des pièces sur le plateau
         initialisation des positions des rois dans la mémoire du plateau
-        lancement de la partie
         """
         self.moves = []
         self.board = Board()

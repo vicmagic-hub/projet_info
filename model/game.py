@@ -118,14 +118,12 @@ class Game():
         sauvegarde de la partie dans un fichier txt
         écrasement des autres parties sauvegardées
         """
-        game_path = Path("game")
-        has_game = game_path.exists()
-        if not has_game : 
-            Path("game").mkdir()
-            game_path = Path("game")
-        path = game_path / "save.txt"
+        SAVE_PATH = Path(__file__).resolve().parent.parent / "game" / "save.txt"
+        has_game = SAVE_PATH.exists()
+        GAME_PATH = Path(__file__).resolve().parent.parent / "game"
+        GAME_PATH.mkdir(exist_ok=True)
         s = str(self)
-        with open(path, "w", encoding="utf-8") as f:
+        with open(SAVE_PATH, "w", encoding="utf-8") as f:
             f.write(s)
         
     @classmethod
@@ -134,9 +132,9 @@ class Game():
         création de partie en "lecture" depuis partie stockée en local en txt
         renvoie la partie correspondante
         """
-        path = "game/save.txt"
+        SAVE_PATH = Path(__file__).resolve().parent.parent / "game" / "save.txt"
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(SAVE_PATH, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f]
 
         #description de la partie

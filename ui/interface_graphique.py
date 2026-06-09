@@ -39,7 +39,10 @@ UNICODE = {
     ('white', 'K'): '♔', ('black', 'K'): '♚',
 }
 
-FONT_PATH = Path("asset/DejaVuSans.ttf")
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+FONT_PATH = BASE_DIR / "asset" / "DejaVuSans.ttf"
 
 def get_symbol_font(size):
     try:
@@ -283,8 +286,9 @@ class ChessUI:
         """
         Affiche le menu principal et crée ou charge une partie.
         """
-        save_path = Path("game/save.txt")
-        has_save = save_path.exists()
+        SAVE_PATH = Path(__file__).resolve().parent.parent / "game" / "save.txt"
+        folder = Path(__file__).resolve().parent.parent / "game"
+        has_save = SAVE_PATH.exists()
         self.game = None
 
         pygame.init()

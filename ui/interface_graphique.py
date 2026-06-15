@@ -40,9 +40,9 @@ UNICODE = {
 }
 
 
-
+#chemin vers la police : 
 BASE_DIR = Path(__file__).resolve().parent.parent
-FONT_PATH = BASE_DIR / "asset" / "DejaVuSans.ttf"
+FONT_PATH = BASE_DIR / "asset" / "DejaVuSans.ttf" 
 
 def get_symbol_font(size):
     try:
